@@ -22,6 +22,18 @@ interface Member {
   }>
 }
 
+interface FamilyEvent {
+  type: "anniversary" | "child_birthday"
+  memberName?: string
+  spouseName?: string
+  childName?: string
+  parentName?: string
+  date: Date
+  daysUntil: number
+  years?: number
+  age?: number
+}
+
 interface FamilyInsightsProps {
   members: Member[]
 }
@@ -34,7 +46,7 @@ export function FamilyInsights({ members }: FamilyInsightsProps) {
   // Upcoming family events
   const getUpcomingFamilyEvents = () => {
     const today = new Date()
-    const events = []
+    const events: FamilyEvent[] = []
 
     members.forEach((member) => {
       // Marriage anniversaries
@@ -183,7 +195,7 @@ export function FamilyInsights({ members }: FamilyInsightsProps) {
             <Gift className="h-5 w-5 text-red-500" />
             Upcoming Family Celebrations
           </CardTitle>
-          <CardDescription>Anniversaries and children's birthdays in the next 60 days</CardDescription>
+          <CardDescription>Anniversaries and children&apos;s birthdays in the next 60 days</CardDescription>
         </CardHeader>
         <CardContent>
           {upcomingEvents.length === 0 ? (

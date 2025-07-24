@@ -275,7 +275,7 @@ export function AnalyticsDashboard({ members }: AnalyticsDashboardProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {nationalityData.map((item, index) => (
+            {nationalityData.map((item) => (
               <div key={item.country} className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="font-medium">{item.country}</span>

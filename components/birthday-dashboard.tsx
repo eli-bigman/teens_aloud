@@ -24,6 +24,16 @@ interface Member {
   }>
 }
 
+interface UpcomingEvent {
+  type: "birthday" | "spouse_birthday" | "anniversary" | "child_birthday"
+  name: string
+  date: Date
+  daysUntil: number
+  age: number
+  contact: { email: string; phone: string }
+  member: Member
+}
+
 interface BirthdayDashboardProps {
   members: Member[]
 }
@@ -38,7 +48,7 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
 
   const getUpcomingBirthdays = () => {
     const today = new Date()
-    const upcoming = []
+    const upcoming: UpcomingEvent[] = []
 
     members.forEach((member) => {
       // Member birthday
@@ -214,9 +224,9 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
         <Card className="border-red-200 bg-red-50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-red-700">
-              <Bell className="h-5 w-5" />🎉 TODAY'S CELEBRATIONS!
+              <Bell className="h-5 w-5" />🎉 TODAY&apos;S CELEBRATIONS!
             </CardTitle>
-            <CardDescription className="text-red-600">Don't forget to send your greetings!</CardDescription>
+            <CardDescription className="text-red-600">Don&apos;t forget to send your greetings!</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {todayEvents.map((event, index) => (
@@ -272,7 +282,7 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
                       <AvatarFallback className={getEventColor(event.type) + " text-white"}>
                         {event.name
                           .split(" ")
-                          .map((n) => n[0])
+                          .map((n: string) => n[0])
                           .join("")
                           .slice(0, 2)}
                       </AvatarFallback>
