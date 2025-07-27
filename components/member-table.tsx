@@ -12,27 +12,36 @@ import { Mail, Phone, MapPin, MoreHorizontal, Eye, Edit, MessageCircle, Calendar
 interface Member {
   id: number
   email: string
-  fullName: string
-  dateOfBirth: string
+  full_name: string
+  date_of_birth: string
   gender: string
   nationality: string
-  phone: string
-  employed: boolean
+  active_phone_number: string
+  currently_employed: boolean
   employer?: string
-  lookingForJob?: boolean
-  address: string
-  onWhatsApp: boolean
-  relationshipStatus: string
-  tertiaryEducation: boolean
+  looking_for_job?: boolean
+  current_address: string
+  on_whatsapp: boolean
+  relationship_status: string
+  tertiary_education: boolean
   school?: string
   spouse?: {
-    fullName: string
-    dateOfBirth: string
-    marriageAnniversary: string
-  }
+    id: number
+    associate_id: number
+    full_name: string
+    date_of_birth: string
+    marriage_anniversary: string
+    have_children: boolean
+    created_at: string
+    updated_at: string
+  } | null
   children?: Array<{
-    fullName: string
-    dateOfBirth: string
+    id: number
+    associate_id: number
+    full_name: string
+    date_of_birth: string
+    created_at: string
+    updated_at: string
   }>
 }
 
@@ -40,31 +49,32 @@ interface MemberTableProps {
   members: Member[]
   searchTerm: string
   filterBy: string
+  onMemberAdded: () => void
 }
 
-export function MemberTable({ members, searchTerm, filterBy }: MemberTableProps) {
+export function MemberTable({ members, searchTerm, filterBy, onMemberAdded }: MemberTableProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 
   const filteredMembers = members.filter((member) => {
     const matchesSearch =
-      member.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.nationality.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.address.toLowerCase().includes(searchTerm.toLowerCase())
+      member.current_address.toLowerCase().includes(searchTerm.toLowerCase())
 
     const matchesFilter = (() => {
       switch (filterBy) {
         case "employed":
-          return member.employed
+          return member.currently_employed
         case "unemployed":
-          return !member.employed
+          return !member.currently_employed
         case "married":
-          return member.relationshipStatus === "Married"
+          return member.relationship_status === "Married"
         case "single":
-          return member.relationshipStatus === "Single"
+          return member.relationship_status === "Single"
         case "whatsapp":
-          return member.onWhatsApp
+          return member.on_whatsapp
         default:
           return true
       }
@@ -112,7 +122,6 @@ export function MemberTable({ members, searchTerm, filterBy }: MemberTableProps)
             <Button variant="outline" size="sm">
               Export CSV
             </Button>
-            <Button size="sm">Add Member</Button>
           </div>
         </CardTitle>
       </CardHeader>
@@ -132,8 +141,8 @@ export function MemberTable({ members, searchTerm, filterBy }: MemberTableProps)
             </TableHeader>
             <TableBody>
               {paginatedMembers.map((member) => {
-                const age = calculateAge(member.dateOfBirth)
-                const daysUntilBirthday = getNextBirthday(member.dateOfBirth)
+                const age = calculateAge(member.date_of_birth)
+                const daysUntilBirthday = getNextBirthday(member.date_of_birth)
 
                 return (
                   <TableRow key={member.id}>
@@ -141,7 +150,7 @@ export function MemberTable({ members, searchTerm, filterBy }: MemberTableProps)
                       <div className="flex items-center gap-3">
                         <Avatar>
                           <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
-                            {member.fullName
+                            {member.full_name
                               .split(" ")
                               .map((n) => n[0])
                               .join("")
@@ -149,7 +158,7 @@ export function MemberTable({ members, searchTerm, filterBy }: MemberTableProps)
                           </AvatarFallback>
                         </Avatar>
                         <div>
-                          <div className="font-medium">{member.fullName}</div>
+                          <div className="font-medium">{member.full_name}</div>
                           <div className="text-sm text-gray-500">
                             {member.gender} • Age {age}
                           </div>
@@ -165,9 +174,9 @@ export function MemberTable({ members, searchTerm, filterBy }: MemberTableProps)
                         </div>
                         <div className="flex items-center gap-1 text-sm">
                           <Phone className="h-3 w-3" />
-                          <span>{member.phone}</span>
+                          <span>{member.active_phone_number}</span>
                         </div>
-                        {member.onWhatsApp && (
+                        {member.on_whatsapp && (
                           <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
                             <MessageCircle className="h-3 w-3 mr-1" />
                             WhatsApp
@@ -181,19 +190,19 @@ export function MemberTable({ members, searchTerm, filterBy }: MemberTableProps)
                         <MapPin className="h-3 w-3" />
                         <span>{member.nationality}</span>
                       </div>
-                      <div className="text-xs text-gray-500 mt-1 truncate max-w-32">{member.address}</div>
+                      <div className="text-xs text-gray-500 mt-1 truncate max-w-32">{member.current_address}</div>
                     </TableCell>
 
                     <TableCell>
                       <div className="space-y-1">
-                        <Badge variant={member.employed ? "default" : "secondary"}>
-                          {member.employed ? "Employed" : "Job Seeking"}
+                        <Badge variant={member.currently_employed ? "default" : "secondary"}>
+                          {member.currently_employed ? "Employed" : "Job Seeking"}
                         </Badge>
                         {member.employer && (
                           <div className="text-xs text-gray-500 truncate max-w-24">{member.employer}</div>
                         )}
                         <Badge variant="outline" className="text-xs">
-                          {member.relationshipStatus}
+                          {member.relationship_status}
                         </Badge>
                       </div>
                     </TableCell>
@@ -201,7 +210,7 @@ export function MemberTable({ members, searchTerm, filterBy }: MemberTableProps)
                     <TableCell>
                       <div className="space-y-1">
                         <div className="text-sm font-medium">
-                          {new Date(member.dateOfBirth).toLocaleDateString("en-US", {
+                          {new Date(member.date_of_birth).toLocaleDateString("en-US", {
                             month: "short",
                             day: "numeric",
                           })}
@@ -221,7 +230,7 @@ export function MemberTable({ members, searchTerm, filterBy }: MemberTableProps)
                       <div className="space-y-1">
                         {member.spouse && (
                           <Badge variant="outline" className="text-xs">
-                            Spouse: {member.spouse.fullName.split(" ")[0]}
+                            Spouse: {member.spouse.full_name.split(" ")[0]}
                           </Badge>
                         )}
                         {member.children && member.children.length > 0 && (

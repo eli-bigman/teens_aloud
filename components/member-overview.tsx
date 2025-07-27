@@ -7,13 +7,13 @@ import { MapPin, Briefcase, GraduationCap, MessageCircle, Heart, Baby } from "lu
 
 interface Member {
   id: number
-  fullName: string
+  full_name: string
   nationality: string
-  employed: boolean
-  onWhatsApp: boolean
-  relationshipStatus: string
-  tertiaryEducation: boolean
-  children?: Array<{ fullName: string; dateOfBirth: string }>
+  currently_employed: boolean
+  on_whatsapp: boolean
+  relationship_status: string
+  tertiary_education: boolean
+  children?: Array<{ full_name: string; date_of_birth: string }>
 }
 
 interface MemberOverviewProps {
@@ -22,10 +22,10 @@ interface MemberOverviewProps {
 
 export function MemberOverview({ members }: MemberOverviewProps) {
   const totalMembers = members.length
-  const employedMembers = members.filter((m) => m.employed).length
-  const whatsappMembers = members.filter((m) => m.onWhatsApp).length
-  const marriedMembers = members.filter((m) => m.relationshipStatus === "Married").length
-  const educatedMembers = members.filter((m) => m.tertiaryEducation).length
+  const employedMembers = members.filter((m) => m.currently_employed).length
+  const whatsappMembers = members.filter((m) => m.on_whatsapp).length
+  const marriedMembers = members.filter((m) => m.relationship_status === "Married").length
+  const educatedMembers = members.filter((m) => m.tertiary_education).length
   const membersWithChildren = members.filter((m) => m.children && m.children.length > 0).length
 
   const nationalityStats = members.reduce(
@@ -131,7 +131,7 @@ export function MemberOverview({ members }: MemberOverviewProps) {
             <CardDescription>Top 5 countries by member count</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {topNationalities.map(([country, count]) => (
+            {topNationalities.map(([country, count], index) => (
               <div key={country} className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="font-medium">{country}</span>

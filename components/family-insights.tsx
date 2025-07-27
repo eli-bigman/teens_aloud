@@ -8,30 +8,27 @@ import { Heart, Baby, Calendar, Gift, Users, Cake } from "lucide-react"
 
 interface Member {
   id: number
-  fullName: string
-  dateOfBirth: string
-  relationshipStatus: string
+  full_name: string
+  date_of_birth: string
+  relationship_status: string
   spouse?: {
-    fullName: string
-    dateOfBirth: string
-    marriageAnniversary: string
-  }
+    id: number
+    associate_id: number
+    full_name: string
+    date_of_birth: string
+    marriage_anniversary: string
+    have_children: boolean
+    created_at: string
+    updated_at: string
+  } | null
   children?: Array<{
-    fullName: string
-    dateOfBirth: string
+    id: number
+    associate_id: number
+    full_name: string
+    date_of_birth: string
+    created_at: string
+    updated_at: string
   }>
-}
-
-interface FamilyEvent {
-  type: "anniversary" | "child_birthday"
-  memberName?: string
-  spouseName?: string
-  childName?: string
-  parentName?: string
-  date: Date
-  daysUntil: number
-  years?: number
-  age?: number
 }
 
 interface FamilyInsightsProps {
@@ -39,19 +36,19 @@ interface FamilyInsightsProps {
 }
 
 export function FamilyInsights({ members }: FamilyInsightsProps) {
-  const marriedMembers = members.filter((m) => m.relationshipStatus === "Married")
+  const marriedMembers = members.filter((m) => m.relationship_status === "Married")
   const membersWithChildren = members.filter((m) => m.children && m.children.length > 0)
   const totalChildren = members.reduce((acc, m) => acc + (m.children?.length || 0), 0)
 
   // Upcoming family events
   const getUpcomingFamilyEvents = () => {
     const today = new Date()
-    const events: FamilyEvent[] = []
+    const events = []
 
     members.forEach((member) => {
       // Marriage anniversaries
       if (member.spouse) {
-        const anniversaryDate = new Date(member.spouse.marriageAnniversary)
+        const anniversaryDate = new Date(member.spouse.marriage_anniversary)
         const thisYearAnniversary = new Date(today.getFullYear(), anniversaryDate.getMonth(), anniversaryDate.getDate())
 
         if (thisYearAnniversary < today) {
@@ -63,8 +60,8 @@ export function FamilyInsights({ members }: FamilyInsightsProps) {
         if (daysUntil <= 60) {
           events.push({
             type: "anniversary",
-            memberName: member.fullName,
-            spouseName: member.spouse.fullName,
+            memberName: member.full_name,
+            spouseName: member.spouse.full_name,
             date: thisYearAnniversary,
             daysUntil,
             years: today.getFullYear() - anniversaryDate.getFullYear(),
@@ -75,7 +72,7 @@ export function FamilyInsights({ members }: FamilyInsightsProps) {
       // Children birthdays
       if (member.children) {
         member.children.forEach((child) => {
-          const childBirthDate = new Date(child.dateOfBirth)
+          const childBirthDate = new Date(child.date_of_birth)
           const thisYearChildBirthday = new Date(
             today.getFullYear(),
             childBirthDate.getMonth(),
@@ -91,8 +88,8 @@ export function FamilyInsights({ members }: FamilyInsightsProps) {
           if (daysUntil <= 60) {
             events.push({
               type: "child_birthday",
-              childName: child.fullName,
-              parentName: member.fullName,
+              childName: child.full_name,
+              parentName: member.full_name,
               date: thisYearChildBirthday,
               daysUntil,
               age: today.getFullYear() - childBirthDate.getFullYear(),
@@ -122,7 +119,7 @@ export function FamilyInsights({ members }: FamilyInsightsProps) {
   const childrenAges = members
     .flatMap((m) => m.children || [])
     .map((child) => {
-      const age = new Date().getFullYear() - new Date(child.dateOfBirth).getFullYear()
+      const age = new Date().getFullYear() - new Date(child.date_of_birth).getFullYear()
       return age
     })
 
@@ -195,7 +192,7 @@ export function FamilyInsights({ members }: FamilyInsightsProps) {
             <Gift className="h-5 w-5 text-red-500" />
             Upcoming Family Celebrations
           </CardTitle>
-          <CardDescription>Anniversaries and children&apos;s birthdays in the next 60 days</CardDescription>
+          <CardDescription>Anniversaries and children's birthdays in the next 60 days</CardDescription>
         </CardHeader>
         <CardContent>
           {upcomingEvents.length === 0 ? (
@@ -304,7 +301,7 @@ export function FamilyInsights({ members }: FamilyInsightsProps) {
                   <div className="flex items-center gap-4">
                     <Avatar className="h-12 w-12">
                       <AvatarFallback className="bg-gradient-to-r from-purple-500 to-pink-500 text-white">
-                        {member.fullName
+                        {member.full_name
                           .split(" ")
                           .map((n) => n[0])
                           .join("")
@@ -312,8 +309,10 @@ export function FamilyInsights({ members }: FamilyInsightsProps) {
                       </AvatarFallback>
                     </Avatar>
                     <div>
-                      <h3 className="font-semibold text-lg">{member.fullName}</h3>
-                      <p className="text-sm text-gray-600">Born: {new Date(member.dateOfBirth).toLocaleDateString()}</p>
+                      <h3 className="font-semibold text-lg">{member.full_name}</h3>
+                      <p className="text-sm text-gray-600">
+                        Born: {new Date(member.date_of_birth).toLocaleDateString()}
+                      </p>
                     </div>
                   </div>
                   <Badge variant="outline" className="bg-red-100 text-red-800">
@@ -326,18 +325,18 @@ export function FamilyInsights({ members }: FamilyInsightsProps) {
                   <div className="ml-16 space-y-3">
                     <div className="flex items-center gap-2">
                       <Heart className="h-4 w-4 text-red-500" />
-                      <span className="font-medium">Spouse: {member.spouse.fullName}</span>
+                      <span className="font-medium">Spouse: {member.spouse.full_name}</span>
                       <Badge variant="secondary" className="text-xs">
-                        Born: {new Date(member.spouse.dateOfBirth).toLocaleDateString()}
+                        Born: {new Date(member.spouse.date_of_birth).toLocaleDateString()}
                       </Badge>
                     </div>
                     <div className="flex items-center gap-2">
                       <Gift className="h-4 w-4 text-purple-500" />
                       <span className="text-sm">
-                        Anniversary: {new Date(member.spouse.marriageAnniversary).toLocaleDateString()}
+                        Anniversary: {new Date(member.spouse.marriage_anniversary).toLocaleDateString()}
                       </span>
                       <Badge variant="outline" className="text-xs">
-                        {new Date().getFullYear() - new Date(member.spouse.marriageAnniversary).getFullYear()} years
+                        {new Date().getFullYear() - new Date(member.spouse.marriage_anniversary).getFullYear()} years
                       </Badge>
                     </div>
                   </div>
@@ -352,13 +351,13 @@ export function FamilyInsights({ members }: FamilyInsightsProps) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2 ml-6">
                       {member.children.map((child, index) => (
                         <div key={index} className="flex items-center justify-between p-2 bg-white rounded border">
-                          <span className="text-sm font-medium">{child.fullName}</span>
+                          <span className="text-sm font-medium">{child.full_name}</span>
                           <div className="flex items-center gap-2">
                             <Badge variant="outline" className="text-xs">
-                              Age {new Date().getFullYear() - new Date(child.dateOfBirth).getFullYear()}
+                              Age {new Date().getFullYear() - new Date(child.date_of_birth).getFullYear()}
                             </Badge>
                             <span className="text-xs text-gray-500">
-                              {new Date(child.dateOfBirth).toLocaleDateString()}
+                              {new Date(child.date_of_birth).toLocaleDateString()}
                             </span>
                           </div>
                         </div>

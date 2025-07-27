@@ -4,34 +4,37 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Cake, Gift, Mail, Phone, Calendar, Clock, Bell } from "lucide-react"
+import { Cake, Gift, Mail, Phone, Calendar, Clock, Bell } from 'lucide-react'
 import { useState, useEffect } from "react"
+import { BirthdayEmailModal } from "@/components/birthday-email-modal"
+import { BirthdayCallModal } from "@/components/birthday-call-modal"
+import { SurpriseModal } from "@/components/surprise-modal"
+import { ReminderModal } from "@/components/reminder-modal"
 
 interface Member {
   id: number
-  fullName: string
-  dateOfBirth: string
+  full_name: string
+  date_of_birth: string
   email: string
-  phone: string
+  active_phone_number: string
   spouse?: {
-    fullName: string
-    dateOfBirth: string
-    marriageAnniversary: string
-  }
+    id: number
+    associate_id: number
+    full_name: string
+    date_of_birth: string
+    marriage_anniversary: string
+    have_children: boolean
+    created_at: string
+    updated_at: string
+  } | null
   children?: Array<{
-    fullName: string
-    dateOfBirth: string
+    id: number
+    associate_id: number
+    full_name: string
+    date_of_birth: string
+    created_at: string
+    updated_at: string
   }>
-}
-
-interface UpcomingEvent {
-  type: "birthday" | "spouse_birthday" | "anniversary" | "child_birthday"
-  name: string
-  date: Date
-  daysUntil: number
-  age: number
-  contact: { email: string; phone: string }
-  member: Member
 }
 
 interface BirthdayDashboardProps {
@@ -40,6 +43,11 @@ interface BirthdayDashboardProps {
 
 export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
   const [currentTime, setCurrentTime] = useState(new Date())
+  const [emailModalOpen, setEmailModalOpen] = useState(false)
+  const [callModalOpen, setCallModalOpen] = useState(false)
+  const [surpriseModalOpen, setSurpriseModalOpen] = useState(false)
+  const [reminderModalOpen, setReminderModalOpen] = useState(false)
+  const [selectedMember, setSelectedMember] = useState<Member | null>(null)
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000)
@@ -48,11 +56,11 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
 
   const getUpcomingBirthdays = () => {
     const today = new Date()
-    const upcoming: UpcomingEvent[] = []
+    const upcoming = []
 
     members.forEach((member) => {
       // Member birthday
-      const birthDate = new Date(member.dateOfBirth)
+      const birthDate = new Date(member.date_of_birth)
       const thisYearBirthday = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate())
 
       if (thisYearBirthday < today) {
@@ -64,18 +72,18 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
       if (daysUntil <= 30) {
         upcoming.push({
           type: "birthday",
-          name: member.fullName,
+          name: member.full_name,
           date: thisYearBirthday,
           daysUntil,
           age: today.getFullYear() - birthDate.getFullYear(),
-          contact: { email: member.email, phone: member.phone },
+          contact: { email: member.email, phone: member.active_phone_number },
           member,
         })
       }
 
       // Spouse birthday
       if (member.spouse) {
-        const spouseBirthDate = new Date(member.spouse.dateOfBirth)
+        const spouseBirthDate = new Date(member.spouse.date_of_birth)
         const thisYearSpouseBirthday = new Date(
           today.getFullYear(),
           spouseBirthDate.getMonth(),
@@ -91,11 +99,11 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
         if (spouseDaysUntil <= 30) {
           upcoming.push({
             type: "spouse_birthday",
-            name: `${member.spouse.fullName} (${member.fullName}'s spouse)`,
+            name: `${member.spouse.full_name} (${member.full_name}'s spouse)`,
             date: thisYearSpouseBirthday,
             daysUntil: spouseDaysUntil,
             age: today.getFullYear() - spouseBirthDate.getFullYear(),
-            contact: { email: member.email, phone: member.phone },
+            contact: { email: member.email, phone: member.active_phone_number },
             member,
           })
         }
@@ -103,7 +111,7 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
 
       // Marriage anniversary
       if (member.spouse) {
-        const anniversaryDate = new Date(member.spouse.marriageAnniversary)
+        const anniversaryDate = new Date(member.spouse.marriage_anniversary)
         const thisYearAnniversary = new Date(today.getFullYear(), anniversaryDate.getMonth(), anniversaryDate.getDate())
 
         if (thisYearAnniversary < today) {
@@ -117,11 +125,11 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
         if (anniversaryDaysUntil <= 30) {
           upcoming.push({
             type: "anniversary",
-            name: `${member.fullName} & ${member.spouse.fullName}`,
+            name: `${member.full_name} & ${member.spouse.full_name}`,
             date: thisYearAnniversary,
             daysUntil: anniversaryDaysUntil,
             age: today.getFullYear() - anniversaryDate.getFullYear(),
-            contact: { email: member.email, phone: member.phone },
+            contact: { email: member.email, phone: member.active_phone_number },
             member,
           })
         }
@@ -130,7 +138,7 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
       // Children birthdays
       if (member.children) {
         member.children.forEach((child) => {
-          const childBirthDate = new Date(child.dateOfBirth)
+          const childBirthDate = new Date(child.date_of_birth)
           const thisYearChildBirthday = new Date(
             today.getFullYear(),
             childBirthDate.getMonth(),
@@ -146,11 +154,11 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
           if (childDaysUntil <= 30) {
             upcoming.push({
               type: "child_birthday",
-              name: `${child.fullName} (${member.fullName}'s child)`,
+              name: `${child.full_name} (${member.full_name}'s child)`,
               date: thisYearChildBirthday,
               daysUntil: childDaysUntil,
               age: today.getFullYear() - childBirthDate.getFullYear(),
-              contact: { email: member.email, phone: member.phone },
+              contact: { email: member.email, phone: member.active_phone_number },
               member,
             })
           }
@@ -194,6 +202,26 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
     }
   }
 
+  const handleEmailClick = (member?: Member) => {
+    setSelectedMember(member || null)
+    setEmailModalOpen(true)
+  }
+
+  const handleCallClick = (member?: Member) => {
+    setSelectedMember(member || null)
+    setCallModalOpen(true)
+  }
+
+  const handleSurpriseClick = (member?: Member) => {
+    setSelectedMember(member || null)
+    setSurpriseModalOpen(true)
+  }
+
+  const handleReminderClick = (member?: Member) => {
+    setSelectedMember(member || null)
+    setReminderModalOpen(true)
+  }
+
   return (
     <div className="space-y-6">
       {/* Current Time & Alert Banner */}
@@ -224,9 +252,9 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
         <Card className="border-red-200 bg-red-50">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-red-700">
-              <Bell className="h-5 w-5" />🎉 TODAY&apos;S CELEBRATIONS!
+              <Bell className="h-5 w-5" />🎉 TODAY'S CELEBRATIONS!
             </CardTitle>
-            <CardDescription className="text-red-600">Don&apos;t forget to send your greetings!</CardDescription>
+            <CardDescription className="text-red-600">Don't forget to send your greetings!</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             {todayEvents.map((event, index) => (
@@ -246,11 +274,21 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="flex items-center gap-1 bg-transparent">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="flex items-center gap-1 bg-transparent"
+                    onClick={() => handleEmailClick(event.member)}
+                  >
                     <Mail className="h-4 w-4" />
                     Email
                   </Button>
-                  <Button size="sm" variant="outline" className="flex items-center gap-1 bg-transparent">
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="flex items-center gap-1 bg-transparent"
+                    onClick={() => handleCallClick(event.member)}
+                  >
                     <Phone className="h-4 w-4" />
                     Call
                   </Button>
@@ -282,7 +320,7 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
                       <AvatarFallback className={getEventColor(event.type) + " text-white"}>
                         {event.name
                           .split(" ")
-                          .map((n: string) => n[0])
+                          .map((n) => n[0])
                           .join("")
                           .slice(0, 2)}
                       </AvatarFallback>
@@ -347,25 +385,67 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button className="h-20 flex-col gap-2 bg-transparent" variant="outline">
+            <Button 
+              className="h-20 flex-col gap-2 bg-transparent" 
+              variant="outline"
+              onClick={() => handleEmailClick()}
+            >
               <Mail className="h-6 w-6" />
               <span className="text-sm">Send Birthday Email</span>
             </Button>
-            <Button className="h-20 flex-col gap-2 bg-transparent" variant="outline">
+            <Button 
+              className="h-20 flex-col gap-2 bg-transparent" 
+              variant="outline"
+              onClick={() => handleCallClick()}
+            >
               <Phone className="h-6 w-6" />
               <span className="text-sm">Make Birthday Call</span>
             </Button>
-            <Button className="h-20 flex-col gap-2 bg-transparent" variant="outline">
+            <Button 
+              className="h-20 flex-col gap-2 bg-transparent" 
+              variant="outline"
+              onClick={() => handleSurpriseClick()}
+            >
               <Gift className="h-6 w-6" />
               <span className="text-sm">Plan Surprise</span>
             </Button>
-            <Button className="h-20 flex-col gap-2 bg-transparent" variant="outline">
+            <Button 
+              className="h-20 flex-col gap-2 bg-transparent" 
+              variant="outline"
+              onClick={() => handleReminderClick()}
+            >
               <Calendar className="h-6 w-6" />
               <span className="text-sm">Set Reminder</span>
             </Button>
           </div>
         </CardContent>
       </Card>
+
+      {/* Modals */}
+      <BirthdayEmailModal 
+        open={emailModalOpen} 
+        onOpenChange={setEmailModalOpen}
+        member={selectedMember}
+        members={members}
+      />
+      <BirthdayCallModal 
+        open={callModalOpen} 
+        onOpenChange={setCallModalOpen}
+        member={selectedMember}
+        members={members}
+      />
+      <SurpriseModal 
+        open={surpriseModalOpen} 
+        onOpenChange={setSurpriseModalOpen}
+        member={selectedMember}
+        members={members}
+      />
+      <ReminderModal 
+        open={reminderModalOpen} 
+        onOpenChange={setReminderModalOpen}
+        member={selectedMember}
+        members={members}
+      />
     </div>
   )
 }

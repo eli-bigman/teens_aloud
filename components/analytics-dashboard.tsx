@@ -21,13 +21,13 @@ import { TrendingUp, MapPin, Briefcase, GraduationCap } from "lucide-react"
 
 interface Member {
   id: number
-  fullName: string
-  dateOfBirth: string
+  full_name: string
+  date_of_birth: string
   nationality: string
-  employed: boolean
-  tertiaryEducation: boolean
-  relationshipStatus: string
-  children?: Array<{ fullName: string; dateOfBirth: string }>
+  currently_employed: boolean
+  tertiary_education: boolean
+  relationship_status: string
+  children?: Array<{ full_name: string; date_of_birth: string }>
 }
 
 interface AnalyticsDashboardProps {
@@ -38,7 +38,7 @@ export function AnalyticsDashboard({ members }: AnalyticsDashboardProps) {
   // Age distribution
   const ageGroups = members.reduce(
     (acc, member) => {
-      const age = new Date().getFullYear() - new Date(member.dateOfBirth).getFullYear()
+      const age = new Date().getFullYear() - new Date(member.date_of_birth).getFullYear()
       const group = age < 25 ? "18-24" : age < 30 ? "25-29" : age < 35 ? "30-34" : age < 40 ? "35-39" : "40+"
       acc[group] = (acc[group] || 0) + 1
       return acc
@@ -51,7 +51,7 @@ export function AnalyticsDashboard({ members }: AnalyticsDashboardProps) {
   // Birth month distribution
   const birthMonths = members.reduce(
     (acc, member) => {
-      const month = new Date(member.dateOfBirth).toLocaleDateString("en-US", { month: "short" })
+      const month = new Date(member.date_of_birth).toLocaleDateString("en-US", { month: "short" })
       acc[month] = (acc[month] || 0) + 1
       return acc
     },
@@ -69,19 +69,19 @@ export function AnalyticsDashboard({ members }: AnalyticsDashboardProps) {
   const employmentEducationData = [
     {
       category: "Employed + Educated",
-      count: members.filter((m) => m.employed && m.tertiaryEducation).length,
+      count: members.filter((m) => m.currently_employed && m.tertiary_education).length,
     },
     {
       category: "Employed + No Tertiary",
-      count: members.filter((m) => m.employed && !m.tertiaryEducation).length,
+      count: members.filter((m) => m.currently_employed && !m.tertiary_education).length,
     },
     {
       category: "Unemployed + Educated",
-      count: members.filter((m) => !m.employed && m.tertiaryEducation).length,
+      count: members.filter((m) => !m.currently_employed && m.tertiary_education).length,
     },
     {
       category: "Unemployed + No Tertiary",
-      count: members.filter((m) => !m.employed && !m.tertiaryEducation).length,
+      count: members.filter((m) => !m.currently_employed && !m.tertiary_education).length,
     },
   ]
 
@@ -101,7 +101,7 @@ export function AnalyticsDashboard({ members }: AnalyticsDashboardProps) {
   // Relationship status
   const relationshipData = members.reduce(
     (acc, member) => {
-      acc[member.relationshipStatus] = (acc[member.relationshipStatus] || 0) + 1
+      acc[member.relationship_status] = (acc[member.relationship_status] || 0) + 1
       return acc
     },
     {} as Record<string, number>,
@@ -127,7 +127,7 @@ export function AnalyticsDashboard({ members }: AnalyticsDashboardProps) {
                 <p className="text-2xl font-bold">
                   {Math.round(
                     members.reduce((acc, m) => {
-                      const age = new Date().getFullYear() - new Date(m.dateOfBirth).getFullYear()
+                      const age = new Date().getFullYear() - new Date(m.date_of_birth).getFullYear()
                       return acc + age
                     }, 0) / members.length,
                   )}
@@ -156,7 +156,7 @@ export function AnalyticsDashboard({ members }: AnalyticsDashboardProps) {
               <div>
                 <p className="text-sm text-gray-600">Employment Rate</p>
                 <p className="text-2xl font-bold">
-                  {Math.round((members.filter((m) => m.employed).length / members.length) * 100)}%
+                  {Math.round((members.filter((m) => m.currently_employed).length / members.length) * 100)}%
                 </p>
               </div>
               <Briefcase className="h-8 w-8 text-purple-500" />
@@ -170,7 +170,7 @@ export function AnalyticsDashboard({ members }: AnalyticsDashboardProps) {
               <div>
                 <p className="text-sm text-gray-600">Education Rate</p>
                 <p className="text-2xl font-bold">
-                  {Math.round((members.filter((m) => m.tertiaryEducation).length / members.length) * 100)}%
+                  {Math.round((members.filter((m) => m.tertiary_education).length / members.length) * 100)}%
                 </p>
               </div>
               <GraduationCap className="h-8 w-8 text-orange-500" />
@@ -275,7 +275,7 @@ export function AnalyticsDashboard({ members }: AnalyticsDashboardProps) {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {nationalityData.map((item) => (
+            {nationalityData.map((item, index) => (
               <div key={item.country} className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="font-medium">{item.country}</span>
@@ -313,7 +313,7 @@ export function AnalyticsDashboard({ members }: AnalyticsDashboardProps) {
                 <li className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
                   {Math.round(
-                    (members.filter((m) => m.relationshipStatus === "Married").length / members.length) * 100,
+                    (members.filter((m) => m.relationship_status === "Married").length / members.length) * 100,
                   )}
                   % of members are married
                 </li>
@@ -325,12 +325,12 @@ export function AnalyticsDashboard({ members }: AnalyticsDashboardProps) {
               <ul className="space-y-2 text-sm">
                 <li className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                  {Math.round((members.filter((m) => m.employed).length / members.length) * 100)}% employment rate
-                  across all members
+                  {Math.round((members.filter((m) => m.currently_employed).length / members.length) * 100)}% employment
+                  rate across all members
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                  {Math.round((members.filter((m) => m.tertiaryEducation).length / members.length) * 100)}% have
+                  {Math.round((members.filter((m) => m.tertiary_education).length / members.length) * 100)}% have
                   tertiary education
                 </li>
                 <li className="flex items-center gap-2">
