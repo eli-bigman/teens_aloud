@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import Image from "next/image"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
@@ -218,20 +219,38 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl font-bold text-gray-900">TEENS ALOUD FOUNDATION</h1>
-          <p className="text-xl text-gray-600">Associates Admin Dashboard</p>
-          <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
-            <div className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              <span>{totalMembers} Active Members</span>
-            </div>
-            {error && (
-              <div className="flex items-center gap-2 text-red-600">
-                <span>Error: {error}</span>
-              </div>
-            )}
+        <div className="flex items-center justify-between">
+          {/* Logo on the left */}
+          <div className="flex items-center gap-4">
+            <Image
+              src="/associate_fellowship.png"
+              alt="Associates Fellowship Logo"
+              width={80}
+              height={80}
+              className="rounded-full border-4 border-black"
+              style={{ borderRadius: '50%' }}
+            />
           </div>
+
+          {/* Center title */}
+          <div className="text-center flex-1 space-y-2">
+            <h1 className="text-4xl font-bold text-gray-900">TEENS ALOUD FOUNDATION</h1>
+            <p className="text-xl text-gray-600">Associates Admin Dashboard</p>
+            <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4" />
+                <span>{totalMembers} Active Members</span>
+              </div>
+              {error && (
+                <div className="flex items-center gap-2 text-red-600">
+                  <span>Error: {error}</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Right side spacer for balance */}
+          <div className="w-20"></div>
         </div>
 
         {/* Quick Stats */}
