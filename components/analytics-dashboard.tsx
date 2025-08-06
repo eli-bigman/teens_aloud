@@ -17,7 +17,7 @@ import {
   LineChart,
   Line,
 } from "recharts"
-import { TrendingUp, MapPin, Briefcase, GraduationCap } from "lucide-react"
+import { TrendingUp, MapPin, Briefcase, GraduationCap, BarChart3 } from "lucide-react"
 
 interface Member {
   id: number
@@ -35,6 +35,32 @@ interface AnalyticsDashboardProps {
 }
 
 export function AnalyticsDashboard({ members }: AnalyticsDashboardProps) {
+  // Early return if no members data
+  if (!members || members.length === 0) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="p-4 bg-gray-100 rounded-full">
+                <BarChart3 className="h-16 w-16 text-gray-400" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-gray-600">No Analytics Data Available</h3>
+                <p className="text-gray-500 max-w-md">
+                  {!members || members.length === 0 
+                    ? "Add members to your database to see detailed analytics and insights about your community."
+                    : "Unable to load analytics data. Please check your database connection and try again."
+                  }
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   // Age distribution
   const ageGroups = members.reduce(
     (acc, member) => {
@@ -125,12 +151,15 @@ export function AnalyticsDashboard({ members }: AnalyticsDashboardProps) {
               <div>
                 <p className="text-sm text-gray-600">Average Age</p>
                 <p className="text-2xl font-bold">
-                  {Math.round(
-                    members.reduce((acc, m) => {
-                      const age = new Date().getFullYear() - new Date(m.date_of_birth).getFullYear()
-                      return acc + age
-                    }, 0) / members.length,
-                  )}
+                  {members.length > 0 
+                    ? Math.round(
+                        members.reduce((acc, m) => {
+                          const age = new Date().getFullYear() - new Date(m.date_of_birth).getFullYear()
+                          return acc + age
+                        }, 0) / members.length,
+                      )
+                    : 0
+                  }
                 </p>
               </div>
               <TrendingUp className="h-8 w-8 text-blue-500" />

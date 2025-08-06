@@ -36,6 +36,32 @@ interface FamilyInsightsProps {
 }
 
 export function FamilyInsights({ members }: FamilyInsightsProps) {
+  // Early return if no members data
+  if (!members || members.length === 0) {
+    return (
+      <div className="space-y-6">
+        <Card>
+          <CardContent className="p-8 text-center">
+            <div className="flex flex-col items-center space-y-4">
+              <div className="p-4 bg-gray-100 rounded-full">
+                <Users className="h-16 w-16 text-gray-400" />
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-lg font-semibold text-gray-600">No Family Data Available</h3>
+                <p className="text-gray-500 max-w-md">
+                  {!members || members.length === 0 
+                    ? "Add members with family information to see family insights, anniversaries, and children data."
+                    : "Unable to load family data. Please check your database connection and try again."
+                  }
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
+
   const marriedMembers = members.filter((m) => m.relationship_status === "Married")
   const membersWithChildren = members.filter((m) => m.children && m.children.length > 0)
   const totalChildren = members.reduce((acc, m) => acc + (m.children?.length || 0), 0)
@@ -146,50 +172,50 @@ export function FamilyInsights({ members }: FamilyInsightsProps) {
     <div className="space-y-6">
       {/* Family Overview Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card className="bg-gradient-to-r from-pink-500 to-rose-500 text-white">
+        <Card className="bg-gradient-to-r from-teal-500 to-cyan-500 text-white">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-pink-100">Married Couples</p>
+                <p className="text-teal-100">Married Couples</p>
                 <p className="text-2xl font-bold">{marriedMembers.length}</p>
               </div>
-              <Heart className="h-8 w-8 text-pink-200" />
+              <Heart className="h-8 w-8 text-teal-200" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-blue-500 to-cyan-500 text-white">
+        <Card className="bg-gradient-to-r from-amber-500 to-yellow-500 text-white">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-blue-100">Families with Children</p>
+                <p className="text-amber-100">Families with Children</p>
                 <p className="text-2xl font-bold">{membersWithChildren.length}</p>
               </div>
-              <Users className="h-8 w-8 text-blue-200" />
+              <Users className="h-8 w-8 text-amber-200" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-green-500 to-emerald-500 text-white">
+        <Card className="bg-gradient-to-r from-slate-500 to-gray-600 text-white">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-green-100">Total Children</p>
+                <p className="text-slate-100">Total Children</p>
                 <p className="text-2xl font-bold">{totalChildren}</p>
               </div>
-              <Baby className="h-8 w-8 text-green-200" />
+              <Baby className="h-8 w-8 text-slate-200" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white">
+        <Card className="bg-gradient-to-r from-lime-500 to-green-400 text-white">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-purple-100">Upcoming Events</p>
+                <p className="text-lime-100">Upcoming Events</p>
                 <p className="text-2xl font-bold">{upcomingEvents.length}</p>
               </div>
-              <Calendar className="h-8 w-8 text-purple-200" />
+              <Calendar className="h-8 w-8 text-lime-200" />
             </div>
           </CardContent>
         </Card>

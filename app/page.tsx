@@ -227,7 +227,7 @@ export default function AdminDashboard() {
               alt="Associates Fellowship Logo"
               width={80}
               height={80}
-              className="rounded-full border-4 border-black"
+              className="rounded-full border-1 border-black"
               style={{ borderRadius: '50%' }}
             />
           </div>
