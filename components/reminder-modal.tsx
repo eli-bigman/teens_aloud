@@ -34,17 +34,6 @@ export function ReminderModal({ open, onOpenChange, member, members }: ReminderM
   const [reminderNote, setReminderNote] = useState("")
   const [reminderMethod, setReminderMethod] = useState("email")
 
-  const calculateAge = (dateOfBirth: string) => {
-    const today = new Date()
-    const birthDate = new Date(dateOfBirth)
-    let age = today.getFullYear() - birthDate.getFullYear()
-    const monthDiff = today.getMonth() - birthDate.getMonth()
-    if (monthDiff === 0 && today.getDate() < birthDate.getDate()) {
-      age--
-    }
-    return age
-  }
-
   const getNextBirthday = (dateOfBirth: string) => {
     const today = new Date()
     const birthDate = new Date(dateOfBirth)
@@ -84,7 +73,7 @@ export function ReminderModal({ open, onOpenChange, member, members }: ReminderM
     reminderDate.setDate(birthdayDate.getDate() - days)
     
     setReminderDate(reminderDate.toISOString().split('T')[0])
-    setReminderNote(`Reminder: ${selectedMember.full_name}'s birthday is in ${days} day${days > 1 ? 's' : ''}!`)
+    setReminderNote(`Reminder: ${selectedMember.full_name}&apos;s birthday is in ${days} day${days > 1 ? 's' : ''}!`)
   }
 
   return (
@@ -284,7 +273,7 @@ export function ReminderModal({ open, onOpenChange, member, members }: ReminderM
                     <h4 className="font-semibold text-blue-800 mb-2">📅 Reminder Preview</h4>
                     <div className="text-sm text-blue-700 space-y-1">
                       <p><strong>When:</strong> {new Date(reminderDate + 'T' + reminderTime).toLocaleString()}</p>
-                      <p><strong>For:</strong> {selectedMember.full_name}'s {reminderType}</p>
+                      <p><strong>For:</strong> {selectedMember.full_name}&apos;s {reminderType}</p>
                       <p><strong>Method:</strong> {reminderMethod}</p>
                       {reminderNote && <p><strong>Note:</strong> {reminderNote}</p>}
                     </div>

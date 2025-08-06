@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Checkbox } from "@/components/ui/checkbox"
-import { User, Phone, MapPin, Briefcase, GraduationCap, Heart, Baby, Loader2, CheckCircle, AlertCircle } from "lucide-react"
+import { User, Phone, Briefcase, GraduationCap, Heart, Baby, Loader2, CheckCircle, AlertCircle } from "lucide-react"
 import { createBrowserClient } from "@/lib/supabase/client"
 import { toast } from "sonner"
 
@@ -734,7 +734,7 @@ export function AddMemberModal({ open, onOpenChange, onMemberAdded }: AddMemberM
                         
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div className="space-y-2">
-                            <Label htmlFor={`child_name_${index}`}>Child's Full Name *</Label>
+                            <Label htmlFor={`child_name_${index}`}>Child&apos;s Full Name *</Label>
                             <Input
                               id={`child_name_${index}`}
                               value={child.full_name}
@@ -744,7 +744,7 @@ export function AddMemberModal({ open, onOpenChange, onMemberAdded }: AddMemberM
                           </div>
                           
                           <div className="space-y-2">
-                            <Label htmlFor={`child_dob_${index}`}>Child's Date of Birth *</Label>
+                            <Label htmlFor={`child_dob_${index}`}>Child&apos;s Date of Birth *</Label>
                             <Input
                               id={`child_dob_${index}`}
                               type="date"

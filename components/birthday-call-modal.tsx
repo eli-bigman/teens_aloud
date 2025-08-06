@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
-import { Phone, User, Calendar, Clock, CheckCircle, Copy } from 'lucide-react'
+import { Phone, User, Calendar, CheckCircle, Copy } from 'lucide-react'
 
 interface Member {
   id: number

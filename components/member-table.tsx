@@ -9,6 +9,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Mail, Phone, MapPin, MoreHorizontal, Eye, Edit, MessageCircle, Calendar } from "lucide-react"
 
+interface MemberTableProps {
+  members: Member[]
+  searchTerm: string
+  filterBy: string
+}
+
 interface Member {
   id: number
   email: string
@@ -45,14 +51,7 @@ interface Member {
   }>
 }
 
-interface MemberTableProps {
-  members: Member[]
-  searchTerm: string
-  filterBy: string
-  onMemberAdded: () => void
-}
-
-export function MemberTable({ members, searchTerm, filterBy, onMemberAdded }: MemberTableProps) {
+export function MemberTable({ members, searchTerm, filterBy }: MemberTableProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const itemsPerPage = 10
 

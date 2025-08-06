@@ -14,7 +14,6 @@ import { AnalyticsDashboard } from "@/components/analytics-dashboard"
 import { FamilyInsights } from "@/components/family-insights"
 import { AddMemberModal } from "@/components/add-member-modal"
 import { createBrowserClient } from "@/lib/supabase/client"
-import { createDatabaseTables } from "@/lib/supabase/setup"
 import { Associate } from "@/lib/supabase"
 import { toast } from "sonner"
 
@@ -25,7 +24,6 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [addMemberModalOpen, setAddMemberModalOpen] = useState(false)
-  const [settingUpDatabase, setSettingUpDatabase] = useState(false)
   const [tablesExist, setTablesExist] = useState<boolean | null>(null)
 
   // Initialize Supabase client
@@ -33,7 +31,7 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     checkTablesAndFetchMembers()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const checkTablesExist = async () => {
     try {
@@ -175,11 +173,6 @@ export default function AdminDashboard() {
 
   const handleMemberAdded = async () => {
     // After a member is added, refresh the data
-    await checkTablesAndFetchMembers()
-  }
-
-  const fetchMembers = async () => {
-    // This function is called from other components, delegate to the new logic
     await checkTablesAndFetchMembers()
   }
 
@@ -419,7 +412,6 @@ export default function AdminDashboard() {
                   members={members} 
                   searchTerm={searchTerm} 
                   filterBy={filterBy} 
-                  onMemberAdded={handleMemberAdded}
                 />
               )}
             </div>

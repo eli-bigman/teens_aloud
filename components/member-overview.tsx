@@ -131,7 +131,7 @@ export function MemberOverview({ members }: MemberOverviewProps) {
             <CardDescription>Top 5 countries by member count</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {topNationalities.map(([country, count], index) => (
+            {topNationalities.map(([country, count]) => (
               <div key={country} className="space-y-2">
                 <div className="flex justify-between items-center">
                   <span className="font-medium">{country}</span>

@@ -1,7 +1,5 @@
-import { createBrowserClient } from "./client"
-
 export async function createDatabaseTables() {
-  const supabase = createBrowserClient()
+  // Note: This function is not currently used but kept for potential future use
   
   try {
     console.log('Attempting to create database tables...')
