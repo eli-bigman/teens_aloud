@@ -73,13 +73,13 @@ export function SurpriseModal({ open, onOpenChange, member, members }: SurpriseM
 
   const handleSaveSurprise = () => {
     // Here you would save the surprise plan to your database
-    console.log("Surprise planned for:", selectedMember?.full_name)
-    console.log("Type:", surpriseType)
-    console.log("Title:", surpriseTitle)
-    console.log("Description:", surpriseDescription)
-    console.log("Budget:", budget)
-    console.log("Location:", location)
-    console.log("Collaborators:", collaborators)
+    
+    
+    
+    
+    
+    
+    
     
     onOpenChange(false)
   }

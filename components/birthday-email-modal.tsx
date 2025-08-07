@@ -124,10 +124,10 @@ Your TEENS ALOUD FOUNDATION friends`
     await new Promise(resolve => setTimeout(resolve, 1500))
     
     // Here you would integrate with your email service
-    console.log("Sending email to:", selectedMember.email)
-    console.log("Subject:", subject)
-    console.log("Message:", message)
-    console.log("Image:", uploadedImage)
+    
+    
+    
+    
     
     setIsSending(false)
     onOpenChange(false)
@@ -252,7 +252,8 @@ Your TEENS ALOUD FOUNDATION friends`
                   </Button>
                   {uploadedImage && (
                     <div className="flex items-center gap-2">
-                      <Image className="h-4 w-4 text-green-600" />
+                      {/* eslint-disable-next-line jsx-a11y/alt-text */}
+                      <Image className="h-4 w-4 text-green-600" aria-hidden="true" />
                       <span className="text-sm text-green-600">Image uploaded</span>
                     </div>
                   )}

@@ -66,8 +66,8 @@ Take care and happy birthday again! 🎉` : ""
   const markCallCompleted = () => {
     setCallCompleted(true)
     // Here you would save the call log to your database
-    console.log("Call completed for:", selectedMember?.full_name)
-    console.log("Notes:", callNotes)
+    
+    
   }
 
   return (

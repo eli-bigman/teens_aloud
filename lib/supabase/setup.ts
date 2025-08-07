@@ -2,7 +2,7 @@ export async function createDatabaseTables() {
   // Note: This function is not currently used but kept for potential future use
   
   try {
-    console.log('Attempting to create database tables...')
+    
     
     // Instead of using RPC, let's try to insert a dummy record to trigger table creation
     // This won't work either, but let's return a helpful message

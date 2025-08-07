@@ -7,18 +7,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
-import { Calendar, Users, Cake, Heart, Baby, Search, Filter, Briefcase, MessageCircle, Loader2, UserPlus } from 'lucide-react'
+import { Calendar, Users, Cake, Heart, Baby, Search, Filter, Briefcase, MessageCircle, Loader2, UserPlus, LogOut, Settings } from 'lucide-react'
 import { BirthdayDashboard } from "@/components/birthday-dashboard"
 import { MemberOverview } from "@/components/member-overview"
 import { MemberTable } from "@/components/member-table"
 import { AnalyticsDashboard } from "@/components/analytics-dashboard"
 import { FamilyInsights } from "@/components/family-insights"
 import { AddMemberModal } from "@/components/add-member-modal"
+import { LoginScreen } from "@/components/login-screen"
+import { AdminManagement } from "@/components/admin-management"
 import { createBrowserClient } from "@/lib/supabase/client"
 import { Associate } from "@/lib/supabase"
+import { useAuth } from "@/hooks/useAuth"
 import { toast } from "sonner"
 
 export default function AdminDashboard() {
+  const { admin, loading: authLoading, login, logout, isAuthenticated } = useAuth()
   const [searchTerm, setSearchTerm] = useState("")
   const [filterBy, setFilterBy] = useState("all")
   const [members, setMembers] = useState<Associate[]>([])
@@ -31,8 +35,26 @@ export default function AdminDashboard() {
   const supabase = createBrowserClient()
 
   useEffect(() => {
-    checkTablesAndFetchMembers()
-  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+    if (isAuthenticated) {
+      checkTablesAndFetchMembers()
+    }
+  }, [isAuthenticated]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Show login screen if not authenticated
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="h-12 w-12 animate-spin mx-auto text-blue-600" />
+          <h2 className="text-2xl font-semibold text-gray-700">Loading...</h2>
+        </div>
+      </div>
+    )
+  }
+
+  if (!isAuthenticated) {
+    return <LoginScreen onLogin={login} />
+  }
 
   const checkTablesExist = async () => {
     try {
@@ -60,15 +82,12 @@ export default function AdminDashboard() {
       setLoading(true)
       setError(null)
       
-      console.log('Checking if tables exist...')
       const exist = await checkTablesExist()
       setTablesExist(exist)
       
       if (exist) {
-        console.log('Tables exist, fetching members...')
         await fetchMembersOnly()
       } else {
-        console.log('Tables do not exist, showing empty state')
         setMembers([])
       }
     } catch (err) {
@@ -84,7 +103,7 @@ export default function AdminDashboard() {
 
   const fetchMembersOnly = async () => {
     try {
-      console.log('Fetching members from existing tables...')
+      
       
       // Fetch all associates
       const { data: allAssociates, error: allAssociatesError } = await supabase
@@ -97,8 +116,8 @@ export default function AdminDashboard() {
         throw allAssociatesError
       }
 
-      console.log('Fetched associates:', allAssociates?.length || 0)
-      console.log('Associates data:', allAssociates)
+      
+      
 
       // If no associates, just return empty array
       if (!allAssociates || allAssociates.length === 0) {
@@ -148,7 +167,7 @@ export default function AdminDashboard() {
         }
       })
 
-      console.log('Combined members with relations:', membersWithRelations.length)
+      
       setMembers(membersWithRelations)
     } catch (err) {
       console.error("Error fetching members:", err)
@@ -219,38 +238,92 @@ export default function AdminDashboard() {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
-          {/* Logo on the left */}
-          <div className="flex items-center gap-4">
-            <Image
-              src="/associate_fellowship.png"
-              alt="Associates Fellowship Logo"
-              width={80}
-              height={80}
-              className="rounded-full border-1 border-black"
-              style={{ borderRadius: '50%' }}
-            />
-          </div>
-
-          {/* Center title */}
-          <div className="text-center flex-1 space-y-2">
-            <h1 className="text-4xl font-bold text-gray-900">TEENS ALOUD FOUNDATION</h1>
-            <p className="text-xl text-gray-600">Associates Admin Dashboard</p>
-            <div className="flex items-center justify-center gap-4 text-sm text-gray-500">
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4" />
-                <span>{totalMembers} Active Members</span>
+        <div className="bg-white/80 backdrop-blur-md rounded-2xl border border-white/20 shadow-xl p-6 mb-8">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-6">
+            {/* Logo Section */}
+            <div className="flex items-center gap-4 shrink-0">
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full blur-sm opacity-75 animate-pulse"></div>
+                <Image
+                  src="/associate_fellowship.png"
+                  alt="Associates Fellowship Logo"
+                  width={80}
+                  height={80}
+                  className="relative rounded-full border-4 border-white shadow-lg ring-2 ring-blue-500/20"
+                  style={{ borderRadius: '50%' }}
+                />
               </div>
-              {error && (
-                <div className="flex items-center gap-2 text-red-600">
-                  <span>Error: {error}</span>
+              <div className="hidden sm:block">
+                <h2 className="text-lg font-bold text-gray-800">Associates</h2>
+                <p className="text-sm text-gray-600">Fellowship</p>
+              </div>
+            </div>
+
+            {/* Center Title Section */}
+            <div className="text-center flex-1 space-y-3">
+              <div className="space-y-1">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-gray-800 via-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  TEENS ALOUD FOUNDATION
+                </h1>
+                <p className="text-lg sm:text-xl text-gray-600 font-medium">Associates Admin Dashboard</p>
+              </div>
+              
+              {/* Stats Bar */}
+              <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 rounded-full border border-blue-200">
+                  <Users className="h-4 w-4 text-blue-600" />
+                  <span className="font-medium text-blue-800">{totalMembers} Active Members</span>
                 </div>
-              )}
+                
+                {error && (
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-red-50 rounded-full border border-red-200">
+                    <span className="text-red-700 font-medium">Error: {error}</span>
+                  </div>
+                )}
+                
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-green-50 rounded-full border border-green-200">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-green-700 font-medium">System Online</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Admin Info & Actions */}
+            <div className="flex items-center gap-4 shrink-0">
+              {/* Admin Profile Card */}
+              <div className="hidden md:flex items-center gap-3 p-3 bg-gradient-to-r from-gray-50 to-blue-50 rounded-xl border border-gray-200">
+                <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                  {admin?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'AD'}
+                </div>
+                <div className="text-right">
+                  <p className="text-xs text-gray-500 font-medium">Welcome back,</p>
+                  <p className="text-sm font-bold text-gray-800 truncate max-w-[120px]" title={admin?.full_name}>
+                    {admin?.full_name || 'Administrator'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Mobile Admin Info */}
+              <div className="md:hidden flex items-center gap-2 p-2 bg-gradient-to-r from-gray-50 to-blue-50 rounded-lg border border-gray-200">
+                <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-xs">
+                  {admin?.full_name?.split(' ').map(n => n[0]).join('').slice(0, 2) || 'AD'}
+                </div>
+                <span className="text-sm font-medium text-gray-700 max-w-[80px] truncate">
+                  {admin?.full_name?.split(' ')[0] || 'Admin'}
+                </span>
+              </div>
+
+              {/* Logout Button */}
+              <Button
+                variant="outline"
+                onClick={logout}
+                className="flex items-center gap-2 px-4 py-2 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300 transition-all duration-200 rounded-xl"
+              >
+                <LogOut className="h-4 w-4" />
+                <span className="hidden sm:inline">Logout</span>
+              </Button>
             </div>
           </div>
-
-          {/* Right side spacer for balance */}
-          <div className="w-20"></div>
         </div>
 
         {/* Quick Stats */}
@@ -305,37 +378,111 @@ export default function AdminDashboard() {
         </div>
 
         {/* Main Dashboard Tabs */}
-        <Tabs defaultValue="birthdays" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="birthdays" className="flex items-center gap-2">
-              <Cake className="h-4 w-4" />
-              <span className="hidden sm:inline">Birthdays</span>
-            </TabsTrigger>
-            <TabsTrigger value="overview" className="flex items-center gap-2">
-              <Users className="h-4 w-4" />
-              <span className="hidden sm:inline">Overview</span>
-            </TabsTrigger>
-            <TabsTrigger value="members" className="flex items-center gap-2">
-              <Search className="h-4 w-4" />
-              <span className="hidden sm:inline">Members</span>
-            </TabsTrigger>
-            <TabsTrigger value="analytics" className="flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              <span className="hidden sm:inline">Analytics</span>
-            </TabsTrigger>
-            <TabsTrigger value="family" className="flex items-center gap-2">
-              <Baby className="h-4 w-4" />
-              <span className="hidden sm:inline">Family</span>
-            </TabsTrigger>
-          </TabsList>
+        <div className="bg-white/60 backdrop-blur-sm rounded-2xl border border-white/30 shadow-lg p-2 mb-6">
+          <Tabs defaultValue="birthdays" className="space-y-6">
+            {/* Desktop Tabs */}
+            <div className="hidden md:block">
+              <TabsList className="grid w-full grid-cols-6 bg-gray-50/80 backdrop-blur-sm rounded-xl p-1.5 border border-gray-200/50">
+                <TabsTrigger 
+                  value="birthdays" 
+                  className="flex items-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200"
+                >
+                  <Cake className="h-4 w-4" />
+                  <span>Birthdays</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="overview" 
+                  className="flex items-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200"
+                >
+                  <Users className="h-4 w-4" />
+                  <span>Overview</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="members" 
+                  className="flex items-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200"
+                >
+                  <Search className="h-4 w-4" />
+                  <span>Members</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="analytics" 
+                  className="flex items-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200"
+                >
+                  <Calendar className="h-4 w-4" />
+                  <span>Analytics</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="family" 
+                  className="flex items-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200"
+                >
+                  <Baby className="h-4 w-4" />
+                  <span>Family</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="admin" 
+                  className="flex items-center gap-2 px-4 py-3 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md transition-all duration-200"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span>Admin</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-          <TabsContent value="birthdays">
-            <BirthdayDashboard members={members} />
-          </TabsContent>
+            {/* Mobile Tabs - Horizontal Scrollable */}
+            <div className="md:hidden">
+              <TabsList className="flex w-full justify-start gap-2 bg-gray-50/80 backdrop-blur-sm rounded-xl p-2 border border-gray-200/50 overflow-x-auto">
+                <TabsTrigger 
+                  value="birthdays" 
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md whitespace-nowrap transition-all duration-200 min-w-fit"
+                >
+                  <Cake className="h-4 w-4" />
+                  <span className="text-sm">Birthdays</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="overview" 
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md whitespace-nowrap transition-all duration-200 min-w-fit"
+                >
+                  <Users className="h-4 w-4" />
+                  <span className="text-sm">Overview</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="members" 
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md whitespace-nowrap transition-all duration-200 min-w-fit"
+                >
+                  <Search className="h-4 w-4" />
+                  <span className="text-sm">Members</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="analytics" 
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md whitespace-nowrap transition-all duration-200 min-w-fit"
+                >
+                  <Calendar className="h-4 w-4" />
+                  <span className="text-sm">Analytics</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="family" 
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md whitespace-nowrap transition-all duration-200 min-w-fit"
+                >
+                  <Baby className="h-4 w-4" />
+                  <span className="text-sm">Family</span>
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="admin" 
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md whitespace-nowrap transition-all duration-200 min-w-fit"
+                >
+                  <Settings className="h-4 w-4" />
+                  <span className="text-sm">Admin</span>
+                </TabsTrigger>
+              </TabsList>
+            </div>
 
-          <TabsContent value="overview">
-            <MemberOverview members={members} />
-          </TabsContent>
+            <TabsContent value="birthdays">
+              <BirthdayDashboard members={members} />
+            </TabsContent>
+
+            <TabsContent value="overview">
+              <MemberOverview members={members} />
+            </TabsContent>
 
           <TabsContent value="members">
             <div className="space-y-4">
@@ -443,15 +590,22 @@ export default function AdminDashboard() {
           <TabsContent value="family">
             <FamilyInsights members={members} />
           </TabsContent>
-        </Tabs>
-      </div>
 
-      {/* Add Member Modal */}
+          <TabsContent value="admin">
+            <AdminManagement currentAdmin={admin!} />
+          </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Add Member Modal */}
       <AddMemberModal 
         open={addMemberModalOpen}
         onOpenChange={setAddMemberModalOpen}
         onMemberAdded={handleMemberAdded}
       />
     </div>
+  </div>
   )
+
 }
+

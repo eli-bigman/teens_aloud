@@ -55,12 +55,12 @@ export function ReminderModal({ open, onOpenChange, member, members }: ReminderM
 
   const handleSetReminder = () => {
     // Here you would save the reminder to your database or notification system
-    console.log("Reminder set for:", selectedMember?.full_name)
-    console.log("Type:", reminderType)
-    console.log("Date:", reminderDate)
-    console.log("Time:", reminderTime)
-    console.log("Method:", reminderMethod)
-    console.log("Note:", reminderNote)
+    
+    
+    
+    
+    
+    
     
     onOpenChange(false)
   }

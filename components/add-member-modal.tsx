@@ -196,8 +196,8 @@ export function AddMemberModal({ open, onOpenChange, onMemberAdded }: AddMemberM
     setIsSubmitting(true)
 
     try {
-      console.log('Submitting new member:', formData.full_name)
-      console.log('Form data:', formData)
+      
+      
       
       // Prepare the data for insertion - ensure all required fields are present
       const associateToInsert = {
@@ -220,7 +220,7 @@ export function AddMemberModal({ open, onOpenChange, onMemberAdded }: AddMemberM
         relationship_status: formData.relationship_status
       }
 
-      console.log('Cleaned associate data:', associateToInsert)
+      
       
       // Insert associate
       const { data: associateData, error: associateError } = await supabase
@@ -240,12 +240,12 @@ export function AddMemberModal({ open, onOpenChange, onMemberAdded }: AddMemberM
         throw associateError
       }
 
-      console.log('Associate inserted successfully:', associateData)
+      
       const associateId = associateData.id
 
       // Insert spouse if married
       if (formData.relationship_status === "Married" && spouseData.full_name.trim()) {
-        console.log('Inserting spouse data...')
+        
         const spouseToInsert = {
           associate_id: associateId,
           full_name: spouseData.full_name,
@@ -263,13 +263,13 @@ export function AddMemberModal({ open, onOpenChange, onMemberAdded }: AddMemberM
           // Don't fail the whole operation if spouse insertion fails
           console.warn('Spouse insertion failed, but associate was created successfully')
         } else {
-          console.log('Spouse inserted successfully')
+          
         }
       }
 
       // Insert children if any
       if (children.length > 0) {
-        console.log('Inserting children data...')
+        
         const childrenToInsert = children
           .filter(child => child.full_name.trim()) // Only insert children with names
           .map(child => ({
@@ -288,7 +288,7 @@ export function AddMemberModal({ open, onOpenChange, onMemberAdded }: AddMemberM
             // Don't fail the whole operation if children insertion fails
             console.warn('Children insertion failed, but associate was created successfully')
           } else {
-            console.log('Children inserted successfully')
+            
           }
         }
       }
@@ -297,7 +297,7 @@ export function AddMemberModal({ open, onOpenChange, onMemberAdded }: AddMemberM
         description: `${formData.full_name} has been successfully added to the database.`
       })
       
-      console.log('Calling onMemberAdded callback...')
+      
       // Call the callback to refresh the member list
       onMemberAdded()
       
