@@ -35,15 +35,31 @@ export function useAuth() {
       // Hash the password for comparison
       const hashedPassword = await hashPassword(credentials.password)
       
-      const { data, error } = await supabase
+      // First, verify credentials (only fetch id and password_hash)
+      const { data: authData, error: authError } = await supabase
         .from('admins')
-        .select('*')
+        .select('id, password_hash')
         .eq('username', credentials.username)
-        .eq('password_hash', hashedPassword)
         .eq('is_active', true)
         .single()
 
-      if (error || !data) {
+      if (authError || !authData) {
+        return false
+      }
+
+      // Verify password hash
+      if (authData.password_hash !== hashedPassword) {
+        return false
+      }
+
+      // Now fetch safe admin data (without password hash)
+      const { data: adminData, error: adminError } = await supabase
+        .from('admins')
+        .select('id, username, email, full_name, is_active, created_at, created_by')
+        .eq('id', authData.id)
+        .single()
+
+      if (adminError || !adminData) {
         return false
       }
 
@@ -51,11 +67,11 @@ export function useAuth() {
       await supabase
         .from('admins')
         .update({ last_login: new Date().toISOString() })
-        .eq('id', data.id)
+        .eq('id', authData.id)
 
-      const adminData = { ...data, last_login: new Date().toISOString() }
-      setAdmin(adminData)
-      localStorage.setItem('teens_aloud_admin', JSON.stringify(adminData))
+      const safeAdminData = { ...adminData, last_login: new Date().toISOString() }
+      setAdmin(safeAdminData)
+      localStorage.setItem('teens_aloud_admin', JSON.stringify(safeAdminData))
       
       return true
     } catch (error) {

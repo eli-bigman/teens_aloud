@@ -55,13 +55,24 @@ export function AdminManagement({ currentAdmin }: AdminManagementProps) {
   const fetchAdmins = async () => {
     try {
       setLoading(true)
+      // Use secure view or explicit column selection to avoid password_hash
       const { data, error } = await supabase
-        .from("admins")
+        .from("admin_secure_view")
         .select("*")
         .order("created_at", { ascending: false })
 
-      if (error) throw error
-      setAdmins(data || [])
+      if (error) {
+        // Fallback to explicit column selection if view doesn't exist
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from("admins")
+          .select("id, username, email, full_name, last_login, created_at, created_by, is_active")
+          .order("created_at", { ascending: false })
+        
+        if (fallbackError) throw fallbackError
+        setAdmins(fallbackData || [])
+      } else {
+        setAdmins(data || [])
+      }
     } catch (error) {
       console.error("Error fetching admins:", error)
       toast.error("Failed to load admin accounts")
