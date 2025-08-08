@@ -11,6 +11,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { UserPlus, Eye, EyeOff, Trash2, User, Mail, Calendar, AlertTriangle } from 'lucide-react'
 import { toast } from "sonner"
 import { createBrowserClient } from "@/lib/supabase/client"
+import bcrypt from "bcryptjs"
 
 interface Admin {
   id: number
@@ -116,7 +117,7 @@ export function AdminManagement({ currentAdmin }: AdminManagementProps) {
       }
 
       // Hash password (in a real app, this should be done server-side)
-      const hashedPassword = await hashPassword(formData.password)
+      const hashedPassword = await bcrypt.hash(formData.password, 12)
 
       const { error } = await supabase
         .from("admins")
@@ -170,13 +171,13 @@ export function AdminManagement({ currentAdmin }: AdminManagementProps) {
   }
 
   // Simple password hashing (use bcrypt or similar in production)
-  const hashPassword = async (password: string): Promise<string> => {
-    const encoder = new TextEncoder()
-    const data = encoder.encode(password + "salt_teens_aloud_2025")
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-    const hashArray = Array.from(new Uint8Array(hashBuffer))
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
-  }
+  // const hashPassword = async (password: string): Promise<string> => {
+  //   const encoder = new TextEncoder()
+  //   const data = encoder.encode(password + "salt_teens_aloud_2025")
+  //   const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  //   const hashArray = Array.from(new Uint8Array(hashBuffer))
+  //   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+  // }
 
   return (
     <div className="space-y-6">

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
 import { createBrowserClient } from '@/lib/supabase/client'
+import bcrypt from 'bcryptjs'
+
 
 interface Admin {
   id: number
@@ -33,7 +35,7 @@ export function useAuth() {
   const login = async (credentials: { username: string; password: string }): Promise<boolean> => {
     try {
       // Hash the password for comparison
-      const hashedPassword = await hashPassword(credentials.password)
+      // const hashedPassword = await hashPassword(credentials.password)
       
       // First, verify credentials (only fetch id and password_hash)
       const { data: authData, error: authError } = await supabase
@@ -43,14 +45,17 @@ export function useAuth() {
         .eq('is_active', true)
         .single()
 
-      if (authError || !authData) {
+
+        if (authError || !authData) {
         return false
       }
 
-      // Verify password hash
-      if (authData.password_hash !== hashedPassword) {
+      const validPassword = await bcrypt.compare(credentials.password, authData.password_hash)
+
+      if (!validPassword) {
         return false
       }
+      
 
       // Now fetch safe admin data (without password hash)
       const { data: adminData, error: adminError } = await supabase
@@ -85,14 +90,14 @@ export function useAuth() {
     localStorage.removeItem('teens_aloud_admin')
   }
 
-  // Simple password hashing (use bcrypt or similar in production)
-  const hashPassword = async (password: string): Promise<string> => {
-    const encoder = new TextEncoder()
-    const data = encoder.encode(password + "salt_teens_aloud_2025")
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data)
-    const hashArray = Array.from(new Uint8Array(hashBuffer))
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
-  }
+  // // Simple password hashing (use bcrypt or similar in production)
+  // const hashPassword = async (password: string): Promise<string> => {
+  //   const encoder = new TextEncoder()
+  //   const data = encoder.encode(password + "salt_teens_aloud_2025")
+  //   const hashBuffer = await crypto.subtle.digest('SHA-256', data)
+  //   const hashArray = Array.from(new Uint8Array(hashBuffer))
+  //   return hashArray.map(b => b.toString(16).padStart(2, '0')).join('')
+  // }
 
   return {
     admin,
