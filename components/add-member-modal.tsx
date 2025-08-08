@@ -21,74 +21,85 @@ interface AddMemberModalProps {
   onMemberAdded: () => void
 }
 
-interface AssociateForm {
+interface MemberForm {
   // Personal Details
   full_name: string
-  email: string
+  email?: string
+  second_email?: string
+  active_email?: string
   date_of_birth: string
   gender: string
   nationality: string
   
   // Contact Information
   active_phone_number: string
-  other_phone_number: string
+  other_phone_number?: string
   current_address: string
-  on_whatsapp: boolean
+  on_associate_whatsapp: boolean
   
   // Education & Employment
-  tertiary_education: boolean
-  school: string
-  year_of_completion: string
+  completed_tertiary: boolean
+  tertiary_institution_name?: string
+  year_of_completion?: string
+  postgrad_year_of_completion?: string
   currently_employed: boolean
-  employer: string
-  looking_for_job: boolean
-  preferred_work_area: string
+  current_employer?: string
+  prefered_work_industry?: string
+  area_of_work?: string
+  looking_for_job?: boolean
   
   // Relationship Status
   relationship_status: string
+  has_children: boolean
+  number_of_children?: string
 }
 
 interface SpouseForm {
   full_name: string
   date_of_birth: string
-  marriage_anniversary: string
-  have_children: boolean
+  marriage_anniversary_date: string
 }
 
 interface ChildForm {
   full_name: string
   date_of_birth: string
+  child_order: number
 }
 
 export function AddMemberModal({ open, onOpenChange, onMemberAdded }: AddMemberModalProps) {
   const [currentTab, setCurrentTab] = useState("personal")
   const [isSubmitting, setIsSubmitting] = useState(false)
   
-  const [formData, setFormData] = useState<AssociateForm>({
+  const [formData, setFormData] = useState<MemberForm>({
     full_name: "",
     email: "",
+    second_email: "",
+    active_email: "",
     date_of_birth: "",
     gender: "",
     nationality: "",
     active_phone_number: "",
     other_phone_number: "",
     current_address: "",
-    on_whatsapp: false,
-    tertiary_education: false,
-    school: "",
+    on_associate_whatsapp: false,
+    completed_tertiary: false,
+    tertiary_institution_name: "",
     year_of_completion: "",
+    postgrad_year_of_completion: "",
     currently_employed: false,
-    employer: "",
+    current_employer: "",
+    prefered_work_industry: "",
+    area_of_work: "",
     looking_for_job: false,
-    preferred_work_area: "",
     relationship_status: "Single",
+    has_children: false,
+    number_of_children: "",
   })
 
   const [spouseData, setSpouseData] = useState<SpouseForm>({
     full_name: "",
     date_of_birth: "",
-    marriage_anniversary: "",
-    have_children: false,
+    marriage_anniversary_date: "",
   })
 
   const [children, setChildren] = useState<ChildForm[]>([])
@@ -99,27 +110,32 @@ export function AddMemberModal({ open, onOpenChange, onMemberAdded }: AddMemberM
     setFormData({
       full_name: "",
       email: "",
+      second_email: "",
+      active_email: "",
       date_of_birth: "",
       gender: "",
       nationality: "",
       active_phone_number: "",
       other_phone_number: "",
       current_address: "",
-      on_whatsapp: false,
-      tertiary_education: false,
-      school: "",
+      on_associate_whatsapp: false,
+      completed_tertiary: false,
+      tertiary_institution_name: "",
       year_of_completion: "",
+      postgrad_year_of_completion: "",
       currently_employed: false,
-      employer: "",
+      current_employer: "",
+      prefered_work_industry: "",
+      area_of_work: "",
       looking_for_job: false,
-      preferred_work_area: "",
       relationship_status: "Single",
+      has_children: false,
+      number_of_children: "",
     })
     setSpouseData({
       full_name: "",
       date_of_birth: "",
-      marriage_anniversary: "",
-      have_children: false,
+      marriage_anniversary_date: "",
     })
     setChildren([])
     setCurrentTab("personal")
@@ -130,7 +146,7 @@ export function AddMemberModal({ open, onOpenChange, onMemberAdded }: AddMemberM
     
     // Required fields validation
     if (!formData.full_name.trim()) errors.push("Full name is required")
-    if (!formData.email.trim()) errors.push("Email is required")
+    if (!formData.email?.trim() && !formData.second_email?.trim()) errors.push("At least one email is required")
     if (!formData.date_of_birth) errors.push("Date of birth is required")
     if (!formData.gender) errors.push("Gender is required")
     if (!formData.nationality.trim()) errors.push("Nationality is required")
@@ -141,7 +157,13 @@ export function AddMemberModal({ open, onOpenChange, onMemberAdded }: AddMemberM
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
     if (formData.email && !emailRegex.test(formData.email)) {
-      errors.push("Please enter a valid email address")
+      errors.push("Please enter a valid primary email address")
+    }
+    if (formData.second_email && !emailRegex.test(formData.second_email)) {
+      errors.push("Please enter a valid secondary email address")
+    }
+    if (formData.active_email && !emailRegex.test(formData.active_email)) {
+      errors.push("Please enter a valid active email address")
     }
     
     // Date validation
@@ -157,7 +179,7 @@ export function AddMemberModal({ open, onOpenChange, onMemberAdded }: AddMemberM
     if (formData.relationship_status === "Married") {
       if (!spouseData.full_name.trim()) errors.push("Spouse name is required when married")
       if (!spouseData.date_of_birth) errors.push("Spouse date of birth is required when married")
-      if (!spouseData.marriage_anniversary) errors.push("Marriage anniversary is required when married")
+      if (!spouseData.marriage_anniversary_date) errors.push("Marriage anniversary is required when married")
     }
     
     // Children validation
@@ -170,7 +192,7 @@ export function AddMemberModal({ open, onOpenChange, onMemberAdded }: AddMemberM
   }
 
   const addChild = () => {
-    setChildren([...children, { full_name: "", date_of_birth: "" }])
+    setChildren([...children, { full_name: "", date_of_birth: "", child_order: children.length + 1 }])
   }
 
   const removeChild = (index: number) => {
@@ -200,68 +222,72 @@ export function AddMemberModal({ open, onOpenChange, onMemberAdded }: AddMemberM
       
       
       // Prepare the data for insertion - ensure all required fields are present
-      const associateToInsert = {
-        email: formData.email,
+      const memberToInsert = {
         full_name: formData.full_name,
-        tertiary_education: formData.tertiary_education,
-        school: formData.school || null,
-        year_of_completion: formData.year_of_completion || null,
+        email: formData.email || null,
+        second_email: formData.second_email || null,
+        active_email: formData.active_email || null,
         date_of_birth: formData.date_of_birth,
         gender: formData.gender,
         nationality: formData.nationality,
         active_phone_number: formData.active_phone_number,
         other_phone_number: formData.other_phone_number || null,
-        currently_employed: formData.currently_employed,
-        employer: formData.employer || null,
-        looking_for_job: formData.looking_for_job,
-        preferred_work_area: formData.preferred_work_area || null,
         current_address: formData.current_address,
-        on_whatsapp: formData.on_whatsapp,
-        relationship_status: formData.relationship_status
+        on_associate_whatsapp: formData.on_associate_whatsapp,
+        completed_tertiary: formData.completed_tertiary,
+        tertiary_institution_name: formData.tertiary_institution_name || null,
+        year_of_completion: formData.year_of_completion || null,
+        postgrad_year_of_completion: formData.postgrad_year_of_completion || null,
+        currently_employed: formData.currently_employed,
+        current_employer: formData.current_employer || null,
+        prefered_work_industry: formData.prefered_work_industry || null,
+        area_of_work: formData.area_of_work || null,
+        relationship_status: formData.relationship_status,
+        has_children: formData.has_children || children.length > 0,
+        number_of_children: formData.number_of_children || (children.length > 0 ? children.length.toString() : null)
       }
 
       
       
-      // Insert associate
-      const { data: associateData, error: associateError } = await supabase
-        .from("associates")
-        .insert([associateToInsert])
+      // Insert member
+      const { data: memberData, error: memberError } = await supabase
+        .from("members")
+        .insert([memberToInsert])
         .select()
         .single()
 
-      if (associateError) {
-        console.error('Error inserting associate:', associateError)
+      if (memberError) {
+        console.error('Error inserting member:', memberError)
         
         // If the table doesn't exist, provide a helpful error message
-        if (associateError.message.includes('does not exist') || associateError.message.includes('relation')) {
+        if (memberError.message.includes('does not exist') || memberError.message.includes('relation')) {
           throw new Error('Database tables not set up. Please contact your administrator to set up the database tables.')
         }
         
-        throw associateError
+        throw memberError
       }
 
       
-      const associateId = associateData.id
+      const memberId = memberData.id
 
       // Insert spouse if married
       if (formData.relationship_status === "Married" && spouseData.full_name.trim()) {
         
         const spouseToInsert = {
-          associate_id: associateId,
+          member_id: memberId,
           full_name: spouseData.full_name,
           date_of_birth: spouseData.date_of_birth,
-          marriage_anniversary: spouseData.marriage_anniversary,
-          have_children: spouseData.have_children
+          marriage_anniversary_date: spouseData.marriage_anniversary_date
         }
 
         const { error: spouseError } = await supabase
-          .from("spouses")
+          .from("member_spouses")
           .insert([spouseToInsert])
 
         if (spouseError) {
           console.error('Error inserting spouse:', spouseError)
           // Don't fail the whole operation if spouse insertion fails
-          console.warn('Spouse insertion failed, but associate was created successfully')
+          console.warn('Spouse insertion failed, but member was created successfully')
         } else {
           
         }
@@ -272,21 +298,22 @@ export function AddMemberModal({ open, onOpenChange, onMemberAdded }: AddMemberM
         
         const childrenToInsert = children
           .filter(child => child.full_name.trim()) // Only insert children with names
-          .map(child => ({
-            associate_id: associateId,
+          .map((child, index) => ({
+            member_id: memberId,
             full_name: child.full_name,
-            date_of_birth: child.date_of_birth
+            date_of_birth: child.date_of_birth,
+            child_order: index + 1
           }))
 
         if (childrenToInsert.length > 0) {
           const { error: childrenError } = await supabase
-            .from("children")
+            .from("member_children")
             .insert(childrenToInsert)
 
           if (childrenError) {
             console.error('Error inserting children:', childrenError)
             // Don't fail the whole operation if children insertion fails
-            console.warn('Children insertion failed, but associate was created successfully')
+            console.warn('Children insertion failed, but member was created successfully')
           } else {
             
           }
@@ -511,11 +538,11 @@ export function AddMemberModal({ open, onOpenChange, onMemberAdded }: AddMemberM
                   <div className="space-y-2 md:col-span-2">
                     <div className="flex items-center space-x-2">
                       <Checkbox
-                        id="on_whatsapp"
-                        checked={formData.on_whatsapp}
-                        onCheckedChange={(checked: boolean) => setFormData({ ...formData, on_whatsapp: !!checked })}
+                        id="on_associate_whatsapp"
+                        checked={formData.on_associate_whatsapp}
+                        onCheckedChange={(checked: boolean) => setFormData({ ...formData, on_associate_whatsapp: !!checked })}
                       />
-                      <Label htmlFor="on_whatsapp">Available on WhatsApp</Label>
+                      <Label htmlFor="on_associate_whatsapp">Available on WhatsApp</Label>
                     </div>
                   </div>
                 </div>
@@ -538,21 +565,21 @@ export function AddMemberModal({ open, onOpenChange, onMemberAdded }: AddMemberM
                 <CardContent className="space-y-4">
                   <div className="flex items-center space-x-2">
                     <Checkbox
-                      id="tertiary_education"
-                      checked={formData.tertiary_education}
-                      onCheckedChange={(checked: boolean) => setFormData({ ...formData, tertiary_education: !!checked })}
+                      id="completed_tertiary"
+                      checked={formData.completed_tertiary}
+                      onCheckedChange={(checked: boolean) => setFormData({ ...formData, completed_tertiary: !!checked })}
                     />
-                    <Label htmlFor="tertiary_education">Has tertiary education</Label>
+                    <Label htmlFor="completed_tertiary">Has tertiary education</Label>
                   </div>
                   
-                  {formData.tertiary_education && (
+                  {formData.completed_tertiary && (
                     <>
                       <div className="space-y-2">
-                        <Label htmlFor="school">School/Institution</Label>
+                        <Label htmlFor="tertiary_institution_name">School/Institution</Label>
                         <Input
-                          id="school"
-                          value={formData.school}
-                          onChange={(e) => setFormData({ ...formData, school: e.target.value })}
+                          id="tertiary_institution_name"
+                          value={formData.tertiary_institution_name}
+                          onChange={(e) => setFormData({ ...formData, tertiary_institution_name: e.target.value })}
                           placeholder="Enter school/institution name"
                         />
                       </div>
@@ -592,11 +619,11 @@ export function AddMemberModal({ open, onOpenChange, onMemberAdded }: AddMemberM
                   
                   {formData.currently_employed && (
                     <div className="space-y-2">
-                      <Label htmlFor="employer">Employer</Label>
+                      <Label htmlFor="current_employer">Employer</Label>
                       <Input
-                        id="employer"
-                        value={formData.employer}
-                        onChange={(e) => setFormData({ ...formData, employer: e.target.value })}
+                        id="current_employer"
+                        value={formData.current_employer}
+                        onChange={(e) => setFormData({ ...formData, current_employer: e.target.value })}
                         placeholder="Enter employer name"
                       />
                     </div>
@@ -615,12 +642,12 @@ export function AddMemberModal({ open, onOpenChange, onMemberAdded }: AddMemberM
                       
                       {formData.looking_for_job && (
                         <div className="space-y-2">
-                          <Label htmlFor="preferred_work_area">Preferred Work Area</Label>
+                          <Label htmlFor="prefered_work_industry">Preferred Work Industry</Label>
                           <Input
-                            id="preferred_work_area"
-                            value={formData.preferred_work_area}
-                            onChange={(e) => setFormData({ ...formData, preferred_work_area: e.target.value })}
-                            placeholder="Enter preferred work area"
+                            id="prefered_work_industry"
+                            value={formData.prefered_work_industry}
+                            onChange={(e) => setFormData({ ...formData, prefered_work_industry: e.target.value })}
+                            placeholder="Enter preferred work industry"
                           />
                         </div>
                       )}
@@ -694,12 +721,12 @@ export function AddMemberModal({ open, onOpenChange, onMemberAdded }: AddMemberM
                     </div>
                     
                     <div className="space-y-2 md:col-span-2">
-                      <Label htmlFor="marriage_anniversary">Marriage Anniversary *</Label>
+                      <Label htmlFor="marriage_anniversary_date">Marriage Anniversary *</Label>
                       <Input
-                        id="marriage_anniversary"
+                        id="marriage_anniversary_date"
                         type="date"
-                        value={spouseData.marriage_anniversary}
-                        onChange={(e) => setSpouseData({ ...spouseData, marriage_anniversary: e.target.value })}
+                        value={spouseData.marriage_anniversary_date}
+                        onChange={(e) => setSpouseData({ ...spouseData, marriage_anniversary_date: e.target.value })}
                       />
                     </div>
                   </div>

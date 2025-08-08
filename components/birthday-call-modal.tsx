@@ -9,14 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Phone, User, Calendar, CheckCircle, Copy } from 'lucide-react'
-
-interface Member {
-  id: number
-  full_name: string
-  date_of_birth: string
-  email: string
-  active_phone_number: string
-}
+import { Member } from "@/lib/supabase"
 
 interface BirthdayCallModalProps {
   open: boolean
@@ -43,7 +36,7 @@ export function BirthdayCallModal({ open, onOpenChange, member, members }: Birth
 
   const callScript = selectedMember ? `Hi ${selectedMember.full_name}! 
 
-This is [Your Name] from TEENS ALOUD FOUNDATION ASSOCIATES. I'm calling to wish you a very happy ${calculateAge(selectedMember.date_of_birth)}th birthday! 
+This is [Your Name] from TEENS ALOUD FOUNDATION ASSOCIATES. I'm calling to wish you a very happy ${selectedMember.date_of_birth ? calculateAge(selectedMember.date_of_birth) : 'special'}th birthday! 
 
 I hope you're having a wonderful day filled with joy, celebration, and all your favorite things. 
 
@@ -105,7 +98,7 @@ Take care and happy birthday again! 🎉` : ""
                       <User className="h-4 w-4" />
                       <span>{member.full_name}</span>
                       <Badge variant="outline" className="text-xs">
-                        Age {calculateAge(member.date_of_birth)}
+                        Age {member.date_of_birth ? calculateAge(member.date_of_birth) : 'Unknown'}
                       </Badge>
                     </div>
                   </SelectItem>
@@ -132,7 +125,7 @@ Take care and happy birthday again! 🎉` : ""
                     <div className="text-right">
                       <Badge className="bg-green-500">
                         <Calendar className="h-3 w-3 mr-1" />
-                        Age {calculateAge(selectedMember.date_of_birth)}
+                        Age {selectedMember.date_of_birth ? calculateAge(selectedMember.date_of_birth) : 'Unknown'}
                       </Badge>
                     </div>
                   </div>

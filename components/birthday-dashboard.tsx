@@ -10,32 +10,7 @@ import { BirthdayEmailModal } from "@/components/birthday-email-modal"
 import { BirthdayCallModal } from "@/components/birthday-call-modal"
 import { SurpriseModal } from "@/components/surprise-modal"
 import { ReminderModal } from "@/components/reminder-modal"
-
-interface Member {
-  id: number
-  full_name: string
-  date_of_birth: string
-  email: string
-  active_phone_number: string
-  spouse?: {
-    id: number
-    associate_id: number
-    full_name: string
-    date_of_birth: string
-    marriage_anniversary: string
-    have_children: boolean
-    created_at: string
-    updated_at: string
-  } | null
-  children?: Array<{
-    id: number
-    associate_id: number
-    full_name: string
-    date_of_birth: string
-    created_at: string
-    updated_at: string
-  }>
-}
+import { Member } from "@/lib/supabase"
 
 interface BirthdayDashboardProps {
   members: Member[]
@@ -68,29 +43,34 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
 
     members.forEach((member) => {
       // Member birthday
-      const birthDate = new Date(member.date_of_birth)
-      const thisYearBirthday = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate())
+      if (member.date_of_birth) {
+        const birthDate = new Date(member.date_of_birth)
+        const thisYearBirthday = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate())
 
-      if (thisYearBirthday < today) {
-        thisYearBirthday.setFullYear(today.getFullYear() + 1)
-      }
+        if (thisYearBirthday < today) {
+          thisYearBirthday.setFullYear(today.getFullYear() + 1)
+        }
 
-      const daysUntil = Math.ceil((thisYearBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+        const daysUntil = Math.ceil((thisYearBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
 
-      if (daysUntil <= 30) {
-        upcoming.push({
-          type: "birthday",
-          name: member.full_name,
-          date: thisYearBirthday,
-          daysUntil,
-          age: today.getFullYear() - birthDate.getFullYear(),
-          contact: { email: member.email, phone: member.active_phone_number },
-          member,
-        })
+        if (daysUntil <= 30) {
+          upcoming.push({
+            type: "birthday",
+            name: member.full_name,
+            date: thisYearBirthday,
+            daysUntil,
+            age: today.getFullYear() - birthDate.getFullYear(),
+            contact: { 
+              email: member.email || member.second_email || member.active_email || '', 
+              phone: member.active_phone_number || '' 
+            },
+            member,
+          })
+        }
       }
 
       // Spouse birthday
-      if (member.spouse) {
+      if (member.spouse && member.spouse.date_of_birth) {
         const spouseBirthDate = new Date(member.spouse.date_of_birth)
         const thisYearSpouseBirthday = new Date(
           today.getFullYear(),
@@ -111,15 +91,18 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
             date: thisYearSpouseBirthday,
             daysUntil: spouseDaysUntil,
             age: today.getFullYear() - spouseBirthDate.getFullYear(),
-            contact: { email: member.email, phone: member.active_phone_number },
+            contact: { 
+              email: member.email || member.second_email || member.active_email || '', 
+              phone: member.active_phone_number || '' 
+            },
             member,
           })
         }
       }
 
       // Marriage anniversary
-      if (member.spouse) {
-        const anniversaryDate = new Date(member.spouse.marriage_anniversary)
+      if (member.spouse && member.spouse.marriage_anniversary_date) {
+        const anniversaryDate = new Date(member.spouse.marriage_anniversary_date)
         const thisYearAnniversary = new Date(today.getFullYear(), anniversaryDate.getMonth(), anniversaryDate.getDate())
 
         if (thisYearAnniversary < today) {
@@ -137,7 +120,10 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
             date: thisYearAnniversary,
             daysUntil: anniversaryDaysUntil,
             age: today.getFullYear() - anniversaryDate.getFullYear(),
-            contact: { email: member.email, phone: member.active_phone_number },
+            contact: { 
+              email: member.email || member.second_email || member.active_email || '', 
+              phone: member.active_phone_number || '' 
+            },
             member,
           })
         }
@@ -146,29 +132,34 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
       // Children birthdays
       if (member.children) {
         member.children.forEach((child) => {
-          const childBirthDate = new Date(child.date_of_birth)
-          const thisYearChildBirthday = new Date(
-            today.getFullYear(),
-            childBirthDate.getMonth(),
-            childBirthDate.getDate(),
-          )
+          if (child.date_of_birth) {
+            const childBirthDate = new Date(child.date_of_birth)
+            const thisYearChildBirthday = new Date(
+              today.getFullYear(),
+              childBirthDate.getMonth(),
+              childBirthDate.getDate(),
+            )
 
-          if (thisYearChildBirthday < today) {
-            thisYearChildBirthday.setFullYear(today.getFullYear() + 1)
-          }
+            if (thisYearChildBirthday < today) {
+              thisYearChildBirthday.setFullYear(today.getFullYear() + 1)
+            }
 
-          const childDaysUntil = Math.ceil((thisYearChildBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+            const childDaysUntil = Math.ceil((thisYearChildBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
 
-          if (childDaysUntil <= 30) {
-            upcoming.push({
-              type: "child_birthday",
-              name: `${child.full_name} (${member.full_name}'s child)`,
-              date: thisYearChildBirthday,
-              daysUntil: childDaysUntil,
-              age: today.getFullYear() - childBirthDate.getFullYear(),
-              contact: { email: member.email, phone: member.active_phone_number },
-              member,
-            })
+            if (childDaysUntil <= 30) {
+              upcoming.push({
+                type: "child_birthday",
+                name: `${child.full_name} (${member.full_name}'s child)`,
+                date: thisYearChildBirthday,
+                daysUntil: childDaysUntil,
+                age: today.getFullYear() - childBirthDate.getFullYear(),
+                contact: { 
+                  email: member.email || member.second_email || member.active_email || '', 
+                  phone: member.active_phone_number || '' 
+                },
+                member,
+              })
+            }
           }
         })
       }

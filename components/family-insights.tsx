@@ -5,31 +5,7 @@ import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Progress } from "@/components/ui/progress"
 import { Heart, Baby, Calendar, Gift, Users, Cake } from "lucide-react"
-
-interface Member {
-  id: number
-  full_name: string
-  date_of_birth: string
-  relationship_status: string
-  spouse?: {
-    id: number
-    associate_id: number
-    full_name: string
-    date_of_birth: string
-    marriage_anniversary: string
-    have_children: boolean
-    created_at: string
-    updated_at: string
-  } | null
-  children?: Array<{
-    id: number
-    associate_id: number
-    full_name: string
-    date_of_birth: string
-    created_at: string
-    updated_at: string
-  }>
-}
+import { Member } from "@/lib/supabase"
 
 interface FamilyInsightsProps {
   members: Member[]
@@ -83,8 +59,8 @@ export function FamilyInsights({ members }: FamilyInsightsProps) {
 
     members.forEach((member) => {
       // Marriage anniversaries
-      if (member.spouse) {
-        const anniversaryDate = new Date(member.spouse.marriage_anniversary)
+      if (member.spouse && member.spouse.marriage_anniversary_date) {
+        const anniversaryDate = new Date(member.spouse.marriage_anniversary_date)
         const thisYearAnniversary = new Date(today.getFullYear(), anniversaryDate.getMonth(), anniversaryDate.getDate())
 
         if (thisYearAnniversary < today) {

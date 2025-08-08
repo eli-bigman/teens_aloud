@@ -10,14 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Calendar, User, Clock, Bell, AlertCircle, CheckCircle } from 'lucide-react'
-
-interface Member {
-  id: number
-  full_name: string
-  date_of_birth: string
-  email: string
-  active_phone_number: string
-}
+import { Member } from "@/lib/supabase"
 
 interface ReminderModalProps {
   open: boolean
@@ -66,7 +59,7 @@ export function ReminderModal({ open, onOpenChange, member, members }: ReminderM
   }
 
   const setQuickReminder = (days: number) => {
-    if (!selectedMember) return
+    if (!selectedMember || !selectedMember.date_of_birth) return
     
     const birthdayDate = new Date(getNextBirthday(selectedMember.date_of_birth))
     const reminderDate = new Date(birthdayDate)
@@ -99,7 +92,7 @@ export function ReminderModal({ open, onOpenChange, member, members }: ReminderM
                 const member = members.find(m => m.id.toString() === value)
                 setSelectedMember(member || null)
                 if (member) {
-                  setReminderDate(getNextBirthday(member.date_of_birth))
+                  setReminderDate(member.date_of_birth ? getNextBirthday(member.date_of_birth) : '')
                 }
               }}
             >
@@ -113,7 +106,7 @@ export function ReminderModal({ open, onOpenChange, member, members }: ReminderM
                       <User className="h-4 w-4" />
                       <span>{member.full_name}</span>
                       <Badge variant="outline" className="text-xs">
-                        {getDaysUntilBirthday(member.date_of_birth)} days
+                        {member.date_of_birth ? getDaysUntilBirthday(member.date_of_birth) : 'Unknown'} days
                       </Badge>
                     </div>
                   </SelectItem>
@@ -135,14 +128,14 @@ export function ReminderModal({ open, onOpenChange, member, members }: ReminderM
                       <div>
                         <h3 className="font-semibold">{selectedMember.full_name}</h3>
                         <p className="text-sm text-gray-600">
-                          Birthday: {new Date(selectedMember.date_of_birth).toLocaleDateString()}
+                          Birthday: {selectedMember.date_of_birth ? new Date(selectedMember.date_of_birth).toLocaleDateString() : 'Unknown'}
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
                       <Badge className="bg-orange-500">
                         <Clock className="h-3 w-3 mr-1" />
-                        {getDaysUntilBirthday(selectedMember.date_of_birth)} days
+                        {selectedMember.date_of_birth ? getDaysUntilBirthday(selectedMember.date_of_birth) : 'Unknown'} days
                       </Badge>
                     </div>
                   </div>

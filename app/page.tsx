@@ -17,7 +17,7 @@ import { AddMemberModal } from "@/components/add-member-modal"
 import { LoginScreen } from "@/components/login-screen"
 import { AdminManagement } from "@/components/admin-management"
 import { createBrowserClient } from "@/lib/supabase/client"
-import { Associate } from "@/lib/supabase"
+import { Member } from "@/lib/supabase"
 import { useAuth } from "@/hooks/useAuth"
 import { toast } from "sonner"
 
@@ -25,7 +25,7 @@ export default function AdminDashboard() {
   const { admin, loading: authLoading, login, logout, isAuthenticated } = useAuth()
   const [searchTerm, setSearchTerm] = useState("")
   const [filterBy, setFilterBy] = useState("all")
-  const [members, setMembers] = useState<Associate[]>([])
+  const [members, setMembers] = useState<Member[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [addMemberModalOpen, setAddMemberModalOpen] = useState(false)
@@ -60,7 +60,7 @@ export default function AdminDashboard() {
     try {
       // Test if tables exist by trying a simple query with limit 0
       const { error } = await supabase
-        .from("associates")
+        .from("members")
         .select("id")
         .limit(0)
 
@@ -105,22 +105,22 @@ export default function AdminDashboard() {
     try {
       
       
-      // Fetch all associates
-      const { data: allAssociates, error: allAssociatesError } = await supabase
-        .from("associates")
+      // Fetch all members
+      const { data: allMembers, error: allMembersError } = await supabase
+        .from("members")
         .select("*")
         .order("full_name")
 
-      if (allAssociatesError) {
-        console.error('Associates fetch error:', allAssociatesError)
-        throw allAssociatesError
+      if (allMembersError) {
+        console.error('Members fetch error:', allMembersError)
+        throw allMembersError
       }
 
       
       
 
-      // If no associates, just return empty array
-      if (!allAssociates || allAssociates.length === 0) {
+      // If no members, just return empty array
+      if (!allMembers || allMembers.length === 0) {
         setMembers([])
         return
       }
@@ -129,7 +129,7 @@ export default function AdminDashboard() {
       let spousesData = []
       try {
         const { data, error: spousesError } = await supabase
-          .from("spouses")
+          .from("member_spouses")
           .select("*")
 
         if (spousesError && spousesError.code !== '42P01') {
@@ -137,14 +137,14 @@ export default function AdminDashboard() {
         }
         spousesData = data || []
       } catch (err) {
-        console.warn('Spouses table may not exist yet:', err)
+        console.warn('Member spouses table may not exist yet:', err)
       }
 
       // Fetch children
       let childrenData = []
       try {
         const { data, error: childrenError } = await supabase
-          .from("children")
+          .from("member_children")
           .select("*")
 
         if (childrenError && childrenError.code !== '42P01') {
@@ -152,16 +152,16 @@ export default function AdminDashboard() {
         }
         childrenData = data || []
       } catch (err) {
-        console.warn('Children table may not exist yet:', err)
+        console.warn('Member children table may not exist yet:', err)
       }
 
       // Combine the data
-      const membersWithRelations = allAssociates.map(associate => {
-        const spouse = spousesData.find(s => s.associate_id === associate.id)
-        const children = childrenData.filter(c => c.associate_id === associate.id)
+      const membersWithRelations = allMembers.map(member => {
+        const spouse = spousesData.find(s => s.member_id === member.id)
+        const children = childrenData.filter(c => c.member_id === member.id)
         
         return {
-          ...associate,
+          ...member,
           spouse: spouse || null,
           children: children || []
         }
@@ -212,6 +212,7 @@ export default function AdminDashboard() {
   const totalMembers = members?.length || 0
   const birthdaysThisMonth = members?.filter((member) => {
     try {
+      if (!member.date_of_birth) return false
       const birthDate = new Date(member.date_of_birth)
       const currentMonth = new Date().getMonth()
       return birthDate.getMonth() === currentMonth
@@ -222,8 +223,8 @@ export default function AdminDashboard() {
 
   const anniversariesThisMonth = members?.filter((member) => {
     try {
-      if (!member.spouse?.marriage_anniversary) return false
-      const anniversaryDate = new Date(member.spouse.marriage_anniversary)
+      if (!member.spouse?.marriage_anniversary_date) return false
+      const anniversaryDate = new Date(member.spouse.marriage_anniversary_date)
       const currentMonth = new Date().getMonth()
       return anniversaryDate.getMonth() === currentMonth
     } catch {
@@ -232,7 +233,44 @@ export default function AdminDashboard() {
   }).length || 0
 
   const employedMembers = members?.filter((m) => m.currently_employed).length || 0
-  const whatsappMembers = members?.filter((m) => m.on_whatsapp).length || 0
+  const whatsappMembers = members?.filter((m) => m.on_associate_whatsapp).length || 0
+
+  // WhatsApp group handler with email functionality
+  const handleWhatsAppShare = () => {
+    const whatsappGroupLink = "https://chat.whatsapp.com/JfNae8QhqELAxwscQYmciS"
+    const adminEmail = admin?.email || ""
+    
+    // Email subject and body
+    const emailSubject = encodeURIComponent("Teens Aloud Foundation - Associates WhatsApp Group")
+    const emailBody = encodeURIComponent(`Hello ${admin?.full_name || 'Admin'},
+
+You can join the Teens Aloud Foundation Associates WhatsApp Group using the link below:
+
+${whatsappGroupLink}
+
+This group is for all Associates to stay connected, share updates, and collaborate on foundation activities.
+
+Best regards,
+Teens Aloud Foundation Admin Dashboard`)
+
+    // Create email link
+    const emailLink = `mailto:${adminEmail}?subject=${emailSubject}&body=${emailBody}`
+    
+    // Open WhatsApp link in new tab
+    window.open(whatsappGroupLink, '_blank')
+    
+    // Show success message with option to email the link
+    toast.success("WhatsApp group opened!", {
+      description: "Click here to email the link to yourself",
+      action: {
+        label: "Email Link",
+        onClick: () => {
+          window.location.href = emailLink
+        }
+      },
+      duration: 5000
+    })
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-6">
@@ -313,6 +351,17 @@ export default function AdminDashboard() {
                 </span>
               </div>
 
+              {/* WhatsApp Group Button */}
+              <Button
+                variant="outline"
+                onClick={() => handleWhatsAppShare()}
+                className="flex items-center gap-2 px-4 py-2 text-green-600 hover:text-green-700 hover:bg-green-50 border-green-200 hover:border-green-300 transition-all duration-200 rounded-xl"
+                title="Join Associates WhatsApp Group"
+              >
+                <MessageCircle className="h-4 w-4" />
+                <span className="hidden sm:inline">WhatsApp Group</span>
+              </Button>
+
               {/* Logout Button */}
               <Button
                 variant="outline"
@@ -378,7 +427,7 @@ export default function AdminDashboard() {
         </div>
 
         {/* Main Dashboard Tabs */}
-        <div className="bg-white/60 backdrop-blur-sm rounded-2xl border border-white/30 shadow-lg p-2 mb-6">
+        <div className="bg-white/60 backdrop-blur-sm rounded-2xl border border-white/30 shadow-lg p-4 mb-6">
           <Tabs defaultValue="birthdays" className="space-y-6">
             {/* Desktop Tabs */}
             <div className="hidden md:block">
@@ -430,7 +479,7 @@ export default function AdminDashboard() {
 
             {/* Mobile Tabs - Horizontal Scrollable */}
             <div className="md:hidden">
-              <TabsList className="flex w-full justify-start gap-2 bg-gray-50/80 backdrop-blur-sm rounded-xl p-2 border border-gray-200/50 overflow-x-auto">
+              <TabsList className="flex w-full justify-start gap-2 bg-gray-50/80 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 overflow-x-auto">
                 <TabsTrigger 
                   value="birthdays" 
                   className="flex items-center gap-2 px-3 py-2 rounded-lg data-[state=active]:bg-white data-[state=active]:shadow-md whitespace-nowrap transition-all duration-200 min-w-fit"

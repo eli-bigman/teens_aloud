@@ -16,36 +16,43 @@ interface MemberTableProps {
 }
 
 interface Member {
-  id: number
-  email: string
+  id: string
+  email?: string
+  second_email?: string
+  active_email?: string
   full_name: string
   date_of_birth: string
   gender: string
   nationality: string
   active_phone_number: string
+  other_phone_number?: string
   currently_employed: boolean
-  employer?: string
-  looking_for_job?: boolean
+  current_employer?: string
+  prefered_work_industry?: string
+  area_of_work?: string
   current_address: string
-  on_whatsapp: boolean
+  on_associate_whatsapp: boolean
   relationship_status: string
-  tertiary_education: boolean
-  school?: string
+  completed_tertiary: boolean
+  tertiary_institution_name?: string
+  year_of_completion?: string
+  has_children: boolean
+  number_of_children?: string
   spouse?: {
-    id: number
-    associate_id: number
+    id: string
+    member_id: string
     full_name: string
     date_of_birth: string
-    marriage_anniversary: string
-    have_children: boolean
+    marriage_anniversary_date: string
     created_at: string
     updated_at: string
   } | null
   children?: Array<{
-    id: number
-    associate_id: number
+    id: string
+    member_id: string
     full_name: string
     date_of_birth: string
+    child_order: number
     created_at: string
     updated_at: string
   }>
@@ -56,9 +63,10 @@ export function MemberTable({ members, searchTerm, filterBy }: MemberTableProps)
   const itemsPerPage = 10
 
   const filteredMembers = members.filter((member) => {
+    const searchableEmail = member.email || member.second_email || member.active_email || ''
     const matchesSearch =
       member.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      searchableEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.nationality.toLowerCase().includes(searchTerm.toLowerCase()) ||
       member.current_address.toLowerCase().includes(searchTerm.toLowerCase())
 
@@ -73,7 +81,7 @@ export function MemberTable({ members, searchTerm, filterBy }: MemberTableProps)
         case "single":
           return member.relationship_status === "Single"
         case "whatsapp":
-          return member.on_whatsapp
+          return member.on_associate_whatsapp
         default:
           return true
       }
@@ -169,13 +177,13 @@ export function MemberTable({ members, searchTerm, filterBy }: MemberTableProps)
                       <div className="space-y-1">
                         <div className="flex items-center gap-1 text-sm">
                           <Mail className="h-3 w-3" />
-                          <span className="truncate max-w-32">{member.email}</span>
+                          <span className="truncate max-w-32">{member.email || member.second_email || member.active_email || 'No email'}</span>
                         </div>
                         <div className="flex items-center gap-1 text-sm">
                           <Phone className="h-3 w-3" />
                           <span>{member.active_phone_number}</span>
                         </div>
-                        {member.on_whatsapp && (
+                        {member.on_associate_whatsapp && (
                           <Badge variant="secondary" className="text-xs bg-green-100 text-green-800">
                             <MessageCircle className="h-3 w-3 mr-1" />
                             WhatsApp
@@ -197,8 +205,8 @@ export function MemberTable({ members, searchTerm, filterBy }: MemberTableProps)
                         <Badge variant={member.currently_employed ? "default" : "secondary"}>
                           {member.currently_employed ? "Employed" : "Job Seeking"}
                         </Badge>
-                        {member.employer && (
-                          <div className="text-xs text-gray-500 truncate max-w-24">{member.employer}</div>
+                        {member.current_employer && (
+                          <div className="text-xs text-gray-500 truncate max-w-24">{member.current_employer}</div>
                         )}
                         <Badge variant="outline" className="text-xs">
                           {member.relationship_status}

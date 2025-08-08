@@ -34,48 +34,82 @@ export const supabaseAdmin = process.env.SUPABASE_SERVICE_ROLE_KEY
     )
   : null
 
-// Database types based on your form fields
-export interface Associate {
-  id: number
-  email: string
+// Database types based on the updated Google Forms schema
+export interface Member {
+  id: string
+  timestamp: string
   full_name: string
-  tertiary_education: boolean
-  school?: string
-  year_of_completion?: string
-  date_of_birth: string
-  gender: "Male" | "Female"
-  nationality: string
-  active_phone_number: string
+  email?: string
+  second_email?: string
+  active_email?: string
+  
+  // Personal Information
+  date_of_birth?: string
+  gender?: "Male" | "Female" | "Other"
+  nationality?: string
+  relationship_status?: "Single" | "Married" | "Divorced" | "Widowed"
+  
+  // Contact Information
+  active_phone_number?: string
   other_phone_number?: string
+  current_address?: string
+  
+  // Employment Status
   currently_employed: boolean
-  employer?: string
-  looking_for_job?: boolean
-  preferred_work_area?: string
-  current_address: string
-  on_whatsapp: boolean
-  relationship_status: "Single" | "Married"
+  current_employer?: string
+  prefered_work_industry?: string
+  area_of_work?: string
+  looking_for_job: boolean
+  
+  // Education
+  year_of_completion?: number
+  postgrad_year_of_completion?: number
+  tertiary_institution_name?: string
+  completed_tertiary: boolean
+  
+  // Family Information
+  has_children: boolean
+  number_of_children: number
+  
+  // WhatsApp Association
+  on_associate_whatsapp: boolean
+  
+  // Metadata
   created_at: string
   updated_at: string
-  spouse?: Spouse | null
-  children?: Child[]
+  
+  // Related data (joined from other tables)
+  spouse?: MemberSpouse | null
+  children?: MemberChild[]
 }
 
-export interface Spouse {
-  id: number
-  associate_id: number
+export interface MemberSpouse {
+  id: string
+  member_id: string
   full_name: string
-  date_of_birth: string
-  marriage_anniversary: string
-  have_children: boolean
+  date_of_birth?: string
+  marriage_anniversary_date?: string
   created_at: string
-  updated_at: string
 }
 
-export interface Child {
-  id: number
-  associate_id: number
-  full_name: string
-  date_of_birth: string
+export interface MemberChild {
+  id: string
+  member_id: string
+  full_name?: string
+  date_of_birth?: string
+  child_order: number
   created_at: string
-  updated_at: string
+}
+
+// Legacy interfaces for backward compatibility
+export interface Associate extends Member {}
+export interface Spouse extends MemberSpouse {
+  associate_id: string
+  marriage_anniversary?: string
+  have_children?: boolean
+  updated_at?: string
+}
+export interface Child extends MemberChild {
+  associate_id: string
+  updated_at?: string
 }

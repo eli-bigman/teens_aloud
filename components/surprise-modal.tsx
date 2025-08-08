@@ -11,14 +11,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Gift, User, Calendar, MapPin, DollarSign, Users, Cake, Heart, Star } from 'lucide-react'
-
-interface Member {
-  id: number
-  full_name: string
-  date_of_birth: string
-  email: string
-  active_phone_number: string
-}
+import { Member } from "@/lib/supabase"
 
 interface SurpriseModalProps {
   open: boolean
@@ -118,7 +111,7 @@ export function SurpriseModal({ open, onOpenChange, member, members }: SurpriseM
                       <User className="h-4 w-4" />
                       <span>{member.full_name}</span>
                       <Badge variant="outline" className="text-xs">
-                        Age {calculateAge(member.date_of_birth)}
+                        Age {member.date_of_birth ? calculateAge(member.date_of_birth) : 'Unknown'}
                       </Badge>
                     </div>
                   </SelectItem>
@@ -145,7 +138,7 @@ export function SurpriseModal({ open, onOpenChange, member, members }: SurpriseM
                     <div className="text-right">
                       <Badge className="bg-purple-500">
                         <Calendar className="h-3 w-3 mr-1" />
-                        Age {calculateAge(selectedMember.date_of_birth)}
+                        Age {selectedMember.date_of_birth ? calculateAge(selectedMember.date_of_birth) : 'Unknown'}
                       </Badge>
                     </div>
                   </div>

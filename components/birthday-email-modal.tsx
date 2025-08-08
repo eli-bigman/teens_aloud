@@ -12,14 +12,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Mail, Upload, Sparkles, Send, Image, User, Calendar, Loader2 } from 'lucide-react'
-
-interface Member {
-  id: number
-  full_name: string
-  date_of_birth: string
-  email: string
-  active_phone_number: string
-}
+import { Member } from "@/lib/supabase"
 
 interface BirthdayEmailModalProps {
   open: boolean
@@ -56,7 +49,7 @@ export function BirthdayEmailModal({ open, onOpenChange, member, members }: Birt
     // Simulate AI generation
     await new Promise(resolve => setTimeout(resolve, 2000))
     
-    const age = calculateAge(selectedMember.date_of_birth)
+    const age = selectedMember.date_of_birth ? calculateAge(selectedMember.date_of_birth) : 'special'
     const templates = {
       birthday: `🎉 Happy Birthday, ${selectedMember.full_name}! 🎂
 
@@ -172,7 +165,7 @@ Your TEENS ALOUD FOUNDATION friends`
                       <User className="h-4 w-4" />
                       <span>{member.full_name}</span>
                       <Badge variant="outline" className="text-xs">
-                        Age {calculateAge(member.date_of_birth)}
+                        Age {member.date_of_birth ? calculateAge(member.date_of_birth) : 'Unknown'}
                       </Badge>
                     </div>
                   </SelectItem>
@@ -197,7 +190,7 @@ Your TEENS ALOUD FOUNDATION friends`
                   <div className="text-right">
                     <Badge className="bg-blue-500">
                       <Calendar className="h-3 w-3 mr-1" />
-                      Age {calculateAge(selectedMember.date_of_birth)}
+                      Age {selectedMember.date_of_birth ? calculateAge(selectedMember.date_of_birth) : 'Unknown'}
                     </Badge>
                   </div>
                 </div>

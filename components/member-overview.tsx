@@ -4,17 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { Progress } from "@/components/ui/progress"
 import { MapPin, Briefcase, GraduationCap, MessageCircle, Heart, Baby } from "lucide-react"
-
-interface Member {
-  id: number
-  full_name: string
-  nationality: string
-  currently_employed: boolean
-  on_whatsapp: boolean
-  relationship_status: string
-  tertiary_education: boolean
-  children?: Array<{ full_name: string; date_of_birth: string }>
-}
+import { Member } from "@/lib/supabase"
 
 interface MemberOverviewProps {
   members: Member[]
@@ -23,14 +13,15 @@ interface MemberOverviewProps {
 export function MemberOverview({ members }: MemberOverviewProps) {
   const totalMembers = members.length
   const employedMembers = members.filter((m) => m.currently_employed).length
-  const whatsappMembers = members.filter((m) => m.on_whatsapp).length
+  const whatsappMembers = members.filter((m) => m.on_associate_whatsapp).length
   const marriedMembers = members.filter((m) => m.relationship_status === "Married").length
-  const educatedMembers = members.filter((m) => m.tertiary_education).length
-  const membersWithChildren = members.filter((m) => m.children && m.children.length > 0).length
+  const educatedMembers = members.filter((m) => m.completed_tertiary).length
+  const membersWithChildren = members.filter((m) => m.has_children || (m.children && m.children.length > 0)).length
 
   const nationalityStats = members.reduce(
     (acc, member) => {
-      acc[member.nationality] = (acc[member.nationality] || 0) + 1
+      const nationality = member.nationality || 'Unknown'
+      acc[nationality] = (acc[nationality] || 0) + 1
       return acc
     },
     {} as Record<string, number>,

@@ -18,17 +18,7 @@ import {
   Line,
 } from "recharts"
 import { TrendingUp, MapPin, Briefcase, GraduationCap, BarChart3 } from "lucide-react"
-
-interface Member {
-  id: number
-  full_name: string
-  date_of_birth: string
-  nationality: string
-  currently_employed: boolean
-  tertiary_education: boolean
-  relationship_status: string
-  children?: Array<{ full_name: string; date_of_birth: string }>
-}
+import { Member } from "@/lib/supabase"
 
 interface AnalyticsDashboardProps {
   members: Member[]
@@ -62,9 +52,9 @@ export function AnalyticsDashboard({ members }: AnalyticsDashboardProps) {
   }
 
   // Age distribution
-  const ageGroups = members.reduce(
+  const ageGroups = members.filter(member => member.date_of_birth).reduce(
     (acc, member) => {
-      const age = new Date().getFullYear() - new Date(member.date_of_birth).getFullYear()
+      const age = new Date().getFullYear() - new Date(member.date_of_birth!).getFullYear()
       const group = age < 25 ? "18-24" : age < 30 ? "25-29" : age < 35 ? "30-34" : age < 40 ? "35-39" : "40+"
       acc[group] = (acc[group] || 0) + 1
       return acc
@@ -75,9 +65,9 @@ export function AnalyticsDashboard({ members }: AnalyticsDashboardProps) {
   const ageData = Object.entries(ageGroups).map(([age, count]) => ({ age, count }))
 
   // Birth month distribution
-  const birthMonths = members.reduce(
+  const birthMonths = members.filter(member => member.date_of_birth).reduce(
     (acc, member) => {
-      const month = new Date(member.date_of_birth).toLocaleDateString("en-US", { month: "short" })
+      const month = new Date(member.date_of_birth!).toLocaleDateString("en-US", { month: "short" })
       acc[month] = (acc[month] || 0) + 1
       return acc
     },
@@ -95,26 +85,27 @@ export function AnalyticsDashboard({ members }: AnalyticsDashboardProps) {
   const employmentEducationData = [
     {
       category: "Employed + Educated",
-      count: members.filter((m) => m.currently_employed && m.tertiary_education).length,
+      count: members.filter((m) => m.currently_employed && m.completed_tertiary).length,
     },
     {
       category: "Employed + No Tertiary",
-      count: members.filter((m) => m.currently_employed && !m.tertiary_education).length,
+      count: members.filter((m) => m.currently_employed && !m.completed_tertiary).length,
     },
     {
       category: "Unemployed + Educated",
-      count: members.filter((m) => !m.currently_employed && m.tertiary_education).length,
+      count: members.filter((m) => !m.currently_employed && m.completed_tertiary).length,
     },
     {
       category: "Unemployed + No Tertiary",
-      count: members.filter((m) => !m.currently_employed && !m.tertiary_education).length,
+      count: members.filter((m) => !m.currently_employed && !m.completed_tertiary).length,
     },
   ]
 
   // Nationality distribution
   const nationalityStats = members.reduce(
     (acc, member) => {
-      acc[member.nationality] = (acc[member.nationality] || 0) + 1
+      const nationality = member.nationality || 'Unknown'
+      acc[nationality] = (acc[nationality] || 0) + 1
       return acc
     },
     {} as Record<string, number>,
@@ -127,7 +118,8 @@ export function AnalyticsDashboard({ members }: AnalyticsDashboardProps) {
   // Relationship status
   const relationshipData = members.reduce(
     (acc, member) => {
-      acc[member.relationship_status] = (acc[member.relationship_status] || 0) + 1
+      const status = member.relationship_status || 'Unknown'
+      acc[status] = (acc[status] || 0) + 1
       return acc
     },
     {} as Record<string, number>,
@@ -153,10 +145,10 @@ export function AnalyticsDashboard({ members }: AnalyticsDashboardProps) {
                 <p className="text-2xl font-bold">
                   {members.length > 0 
                     ? Math.round(
-                        members.reduce((acc, m) => {
-                          const age = new Date().getFullYear() - new Date(m.date_of_birth).getFullYear()
+                        members.filter(m => m.date_of_birth).reduce((acc, m) => {
+                          const age = new Date().getFullYear() - new Date(m.date_of_birth!).getFullYear()
                           return acc + age
-                        }, 0) / members.length,
+                        }, 0) / members.filter(m => m.date_of_birth).length,
                       )
                     : 0
                   }
@@ -199,7 +191,7 @@ export function AnalyticsDashboard({ members }: AnalyticsDashboardProps) {
               <div>
                 <p className="text-sm text-gray-600">Education Rate</p>
                 <p className="text-2xl font-bold">
-                  {Math.round((members.filter((m) => m.tertiary_education).length / members.length) * 100)}%
+                  {Math.round((members.filter((m) => m.completed_tertiary).length / members.length) * 100)}%
                 </p>
               </div>
               <GraduationCap className="h-8 w-8 text-orange-500" />
@@ -359,7 +351,7 @@ export function AnalyticsDashboard({ members }: AnalyticsDashboardProps) {
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                  {Math.round((members.filter((m) => m.tertiary_education).length / members.length) * 100)}% have
+                  {Math.round((members.filter((m) => m.completed_tertiary).length / members.length) * 100)}% have
                   tertiary education
                 </li>
                 <li className="flex items-center gap-2">
