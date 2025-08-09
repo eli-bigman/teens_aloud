@@ -103,7 +103,7 @@ export default function AdminDashboard() {
 
   const fetchMembersOnly = async () => {
     try {
-      
+      setLoading(true)
       
       // Fetch all members
       const { data: allMembers, error: allMembersError } = await supabase
@@ -115,9 +115,6 @@ export default function AdminDashboard() {
         console.error('Members fetch error:', allMembersError)
         throw allMembersError
       }
-
-      
-      
 
       // If no members, just return empty array
       if (!allMembers || allMembers.length === 0) {
@@ -167,13 +164,14 @@ export default function AdminDashboard() {
         }
       })
 
-      
       setMembers(membersWithRelations)
     } catch (err) {
       console.error("Error fetching members:", err)
       const errorMessage = err instanceof Error ? err.message : 'Unknown error'
       setError(`Failed to fetch members: ${errorMessage}`)
       setMembers([])
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -194,6 +192,15 @@ export default function AdminDashboard() {
   const handleMemberAdded = async () => {
     // After a member is added, refresh the data
     await checkTablesAndFetchMembers()
+  }
+
+  const handleMemberUpdated = (updatedMember: Member) => {
+    // Update the member in the local state
+    setMembers(prevMembers => 
+      prevMembers.map(member => 
+        member.id === updatedMember.id ? updatedMember : member
+      )
+    )
   }
 
   if (loading) {
@@ -627,6 +634,7 @@ Teens Aloud Foundation Admin Dashboard`)
                   members={members} 
                   searchTerm={searchTerm} 
                   filterBy={filterBy} 
+                  onMemberUpdated={handleMemberUpdated}
                 />
               )}
             </div>

@@ -4,12 +4,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Cake, Gift, Mail, Phone, Calendar, Clock, Bell } from 'lucide-react'
+import { Cake, Gift, Mail, Phone, Calendar, Clock, Bell, Heart } from 'lucide-react'
 import { useState, useEffect } from "react"
 import { BirthdayEmailModal } from "@/components/birthday-email-modal"
 import { BirthdayCallModal } from "@/components/birthday-call-modal"
 import { SurpriseModal } from "@/components/surprise-modal"
 import { ReminderModal } from "@/components/reminder-modal"
+import { WishBirthdayModal } from "@/components/wish-birthday-modal"
 import { Member } from "@/lib/supabase"
 
 interface BirthdayDashboardProps {
@@ -22,7 +23,9 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
   const [callModalOpen, setCallModalOpen] = useState(false)
   const [surpriseModalOpen, setSurpriseModalOpen] = useState(false)
   const [reminderModalOpen, setReminderModalOpen] = useState(false)
+  const [wishModalOpen, setWishModalOpen] = useState(false)
   const [selectedMember, setSelectedMember] = useState<Member | null>(null)
+  const [wishedMembers, setWishedMembers] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000)
@@ -172,6 +175,22 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
   const todayEvents = upcomingEvents.filter((event) => event.daysUntil === 0)
   const thisWeekEvents = upcomingEvents.filter((event) => event.daysUntil > 0 && event.daysUntil <= 7)
   const thisMonthEvents = upcomingEvents.filter((event) => event.daysUntil > 7 && event.daysUntil <= 30)
+  
+  // Get members who have birthdays this week (including today) for dropdown filtering
+  const thisWeekBirthdayMembers = members.filter(member => {
+    if (!member.date_of_birth) return false
+    
+    const today = new Date()
+    const birthDate = new Date(member.date_of_birth)
+    const thisYearBirthday = new Date(today.getFullYear(), birthDate.getMonth(), birthDate.getDate())
+    
+    if (thisYearBirthday < today) {
+      thisYearBirthday.setFullYear(today.getFullYear() + 1)
+    }
+    
+    const daysUntil = Math.ceil((thisYearBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    return daysUntil >= 0 && daysUntil <= 7
+  })
 
   const getEventIcon = (type: string) => {
     switch (type) {
@@ -219,6 +238,15 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
   const handleReminderClick = (member?: Member) => {
     setSelectedMember(member || null)
     setReminderModalOpen(true)
+  }
+
+  const handleWishClick = (member?: Member) => {
+    setSelectedMember(member || null)
+    setWishModalOpen(true)
+  }
+
+  const handleMemberWished = (memberId: string) => {
+    setWishedMembers(prev => new Set(prev).add(memberId))
   }
 
   return (
@@ -332,9 +360,26 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
                       </p>
                     </div>
                   </div>
-                  <Badge variant={event.daysUntil <= 3 ? "destructive" : "secondary"}>
-                    {event.daysUntil === 1 ? "Tomorrow" : `${event.daysUntil} days`}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    <Badge variant={event.daysUntil <= 3 ? "destructive" : "secondary"}>
+                      {event.daysUntil === 1 ? "Tomorrow" : `${event.daysUntil} days`}
+                    </Badge>
+                    {event.type === "birthday" && (
+                      <Button
+                        size="sm"
+                        variant={wishedMembers.has(event.member.id) ? "default" : "outline"}
+                        className={`flex items-center gap-1 ${
+                          wishedMembers.has(event.member.id)
+                            ? "bg-green-600 hover:bg-green-700 text-white"
+                            : "hover:bg-pink-50"
+                        }`}
+                        onClick={() => handleWishClick(event.member)}
+                      >
+                        <Heart className={`h-3 w-3 ${wishedMembers.has(event.member.id) ? "fill-current" : ""}`} />
+                        {wishedMembers.has(event.member.id) ? "Wished" : "Wish"}
+                      </Button>
+                    )}
+                  </div>
                 </div>
               ))
             )}
@@ -383,7 +428,7 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
           <CardDescription>Streamline your celebration workflow</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <Button 
               className="h-20 flex-col gap-2 bg-transparent" 
               variant="outline"
@@ -399,6 +444,14 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
             >
               <Phone className="h-6 w-6" />
               <span className="text-sm">Make Birthday Call</span>
+            </Button>
+            <Button 
+              className="h-20 flex-col gap-2 bg-transparent" 
+              variant="outline"
+              onClick={() => handleWishClick()}
+            >
+              <Heart className="h-6 w-6" />
+              <span className="text-sm">Send Birthday Wish</span>
             </Button>
             <Button 
               className="h-20 flex-col gap-2 bg-transparent" 
@@ -425,25 +478,31 @@ export function BirthdayDashboard({ members }: BirthdayDashboardProps) {
         open={emailModalOpen} 
         onOpenChange={setEmailModalOpen}
         member={selectedMember}
-        members={members}
+        members={thisWeekBirthdayMembers}
       />
       <BirthdayCallModal 
         open={callModalOpen} 
         onOpenChange={setCallModalOpen}
         member={selectedMember}
-        members={members}
+        members={thisWeekBirthdayMembers}
       />
       <SurpriseModal 
         open={surpriseModalOpen} 
         onOpenChange={setSurpriseModalOpen}
         member={selectedMember}
-        members={members}
+        members={thisWeekBirthdayMembers}
       />
       <ReminderModal 
         open={reminderModalOpen} 
         onOpenChange={setReminderModalOpen}
         member={selectedMember}
-        members={members}
+        members={thisWeekBirthdayMembers}
+      />
+      <WishBirthdayModal 
+        open={wishModalOpen} 
+        onOpenChange={setWishModalOpen}
+        member={selectedMember}
+        onMemberWished={handleMemberWished}
       />
     </div>
   )

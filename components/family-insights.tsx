@@ -84,28 +84,30 @@ export function FamilyInsights({ members }: FamilyInsightsProps) {
       // Children birthdays
       if (member.children) {
         member.children.forEach((child) => {
-          const childBirthDate = new Date(child.date_of_birth)
-          const thisYearChildBirthday = new Date(
-            today.getFullYear(),
-            childBirthDate.getMonth(),
-            childBirthDate.getDate(),
-          )
+          if (child.date_of_birth) {
+            const childBirthDate = new Date(child.date_of_birth)
+            const thisYearChildBirthday = new Date(
+              today.getFullYear(),
+              childBirthDate.getMonth(),
+              childBirthDate.getDate(),
+            )
 
-          if (thisYearChildBirthday < today) {
-            thisYearChildBirthday.setFullYear(today.getFullYear() + 1)
-          }
+            if (thisYearChildBirthday < today) {
+              thisYearChildBirthday.setFullYear(today.getFullYear() + 1)
+            }
 
-          const daysUntil = Math.ceil((thisYearChildBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+            const daysUntil = Math.ceil((thisYearChildBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
 
-          if (daysUntil <= 60) {
-            events.push({
-              type: "child_birthday",
-              childName: child.full_name,
-              parentName: member.full_name,
-              date: thisYearChildBirthday,
-              daysUntil,
-              age: today.getFullYear() - childBirthDate.getFullYear(),
-            })
+            if (daysUntil <= 60) {
+              events.push({
+                type: "child_birthday",
+                childName: child.full_name,
+                parentName: member.full_name,
+                date: thisYearChildBirthday,
+                daysUntil,
+                age: today.getFullYear() - childBirthDate.getFullYear(),
+              })
+            }
           }
         })
       }
@@ -130,8 +132,9 @@ export function FamilyInsights({ members }: FamilyInsightsProps) {
   // Children age groups
   const childrenAges = members
     .flatMap((m) => m.children || [])
+    .filter((child) => child.date_of_birth) // Filter out children without birth dates
     .map((child) => {
-      const age = new Date().getFullYear() - new Date(child.date_of_birth).getFullYear()
+      const age = new Date().getFullYear() - new Date(child.date_of_birth!).getFullYear()
       return age
     })
 
@@ -323,7 +326,7 @@ export function FamilyInsights({ members }: FamilyInsightsProps) {
                     <div>
                       <h3 className="font-semibold text-lg">{member.full_name}</h3>
                       <p className="text-sm text-gray-600">
-                        Born: {new Date(member.date_of_birth).toLocaleDateString()}
+                        Born: {member.date_of_birth ? new Date(member.date_of_birth).toLocaleDateString() : "Unknown"}
                       </p>
                     </div>
                   </div>
@@ -339,16 +342,16 @@ export function FamilyInsights({ members }: FamilyInsightsProps) {
                       <Heart className="h-4 w-4 text-red-500" />
                       <span className="font-medium">Spouse: {member.spouse.full_name}</span>
                       <Badge variant="secondary" className="text-xs">
-                        Born: {new Date(member.spouse.date_of_birth).toLocaleDateString()}
+                        Born: {member.spouse.date_of_birth ? new Date(member.spouse.date_of_birth).toLocaleDateString() : "Unknown"}
                       </Badge>
                     </div>
                     <div className="flex items-center gap-2">
                       <Gift className="h-4 w-4 text-purple-500" />
                       <span className="text-sm">
-                        Anniversary: {new Date(member.spouse.marriage_anniversary).toLocaleDateString()}
+                        Anniversary: {member.spouse.marriage_anniversary_date ? new Date(member.spouse.marriage_anniversary_date).toLocaleDateString() : "Unknown"}
                       </span>
                       <Badge variant="outline" className="text-xs">
-                        {new Date().getFullYear() - new Date(member.spouse.marriage_anniversary).getFullYear()} years
+                        {member.spouse.marriage_anniversary_date ? new Date().getFullYear() - new Date(member.spouse.marriage_anniversary_date).getFullYear() : "Unknown"} years
                       </Badge>
                     </div>
                   </div>
@@ -366,10 +369,10 @@ export function FamilyInsights({ members }: FamilyInsightsProps) {
                           <span className="text-sm font-medium">{child.full_name}</span>
                           <div className="flex items-center gap-2">
                             <Badge variant="outline" className="text-xs">
-                              Age {new Date().getFullYear() - new Date(child.date_of_birth).getFullYear()}
+                              Age {child.date_of_birth ? new Date().getFullYear() - new Date(child.date_of_birth).getFullYear() : "Unknown"}
                             </Badge>
                             <span className="text-xs text-gray-500">
-                              {new Date(child.date_of_birth).toLocaleDateString()}
+                              {child.date_of_birth ? new Date(child.date_of_birth).toLocaleDateString() : "Unknown"}
                             </span>
                           </div>
                         </div>

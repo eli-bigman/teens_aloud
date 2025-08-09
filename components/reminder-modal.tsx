@@ -46,6 +46,29 @@ export function ReminderModal({ open, onOpenChange, member, members }: ReminderM
     return daysUntil
   }
 
+  const calculateDaysUntilBirthday = (birthDate: string) => {
+    const today = new Date()
+    const birth = new Date(birthDate)
+    const thisYearBirthday = new Date(today.getFullYear(), birth.getMonth(), birth.getDate())
+    
+    if (thisYearBirthday < today) {
+      thisYearBirthday.setFullYear(today.getFullYear() + 1)
+    }
+    
+    const daysUntil = Math.ceil((thisYearBirthday.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
+    return daysUntil
+  }
+
+  const getBirthdayTimingText = (birthDate: string) => {
+    if (!birthDate) return ""
+    const daysUntil = calculateDaysUntilBirthday(birthDate)
+    
+    if (daysUntil === 0) return "Today! 🎉"
+    if (daysUntil === 1) return "Tomorrow"
+    if (daysUntil <= 7) return `In ${daysUntil} days`
+    return `In ${daysUntil} days`
+  }
+
   const handleSetReminder = () => {
     // Here you would save the reminder to your database or notification system
     
@@ -102,12 +125,21 @@ export function ReminderModal({ open, onOpenChange, member, members }: ReminderM
               <SelectContent>
                 {members.map((member) => (
                   <SelectItem key={member.id} value={member.id.toString()}>
-                    <div className="flex items-center gap-2">
-                      <User className="h-4 w-4" />
-                      <span>{member.full_name}</span>
-                      <Badge variant="outline" className="text-xs">
-                        {member.date_of_birth ? getDaysUntilBirthday(member.date_of_birth) : 'Unknown'} days
-                      </Badge>
+                    <div className="flex items-center justify-between w-full">
+                      <div className="flex items-center gap-2">
+                        <User className="h-4 w-4" />
+                        <span>{member.full_name}</span>
+                      </div>
+                      <div className="flex items-center gap-2 ml-4">
+                        {member.date_of_birth && (
+                          <Badge variant="secondary" className="text-xs bg-orange-100 text-orange-700">
+                            {getBirthdayTimingText(member.date_of_birth)}
+                          </Badge>
+                        )}
+                        <Badge variant="outline" className="text-xs">
+                          {member.date_of_birth ? getDaysUntilBirthday(member.date_of_birth) : 'Unknown'} days
+                        </Badge>
+                      </div>
                     </div>
                   </SelectItem>
                 ))}

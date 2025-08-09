@@ -102,6 +102,7 @@ export interface MemberChild {
 }
 
 // Legacy interfaces for backward compatibility
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
 export interface Associate extends Member {}
 export interface Spouse extends MemberSpouse {
   associate_id: string
