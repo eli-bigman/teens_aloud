@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { UserPlus, Eye, EyeOff, Trash2, User, Mail, Calendar, AlertTriangle } from 'lucide-react'
+import { UserPlus, Eye, EyeOff, Trash2, User, Mail, Calendar, AlertTriangle, Edit } from 'lucide-react'
 import { toast } from "sonner"
 import { createBrowserClient } from "@/lib/supabase/client"
 import bcrypt from "bcryptjs"
@@ -33,6 +33,7 @@ export function AdminManagement({ currentAdmin }: AdminManagementProps) {
   const [loading, setLoading] = useState(true)
   const [isAddModalOpen, setIsAddModalOpen] = useState(false)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const [isPasswordChangeModalOpen, setIsPasswordChangeModalOpen] = useState(false)
   const [adminToDelete, setAdminToDelete] = useState<Admin | null>(null)
   
   // Form state
@@ -43,8 +44,19 @@ export function AdminManagement({ currentAdmin }: AdminManagementProps) {
     password: "",
     confirmPassword: ""
   })
+  
+  // Password change form state
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmNewPassword: ""
+  })
+  
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
+  const [showNewPassword, setShowNewPassword] = useState(false)
+  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const supabase = createBrowserClient()
@@ -167,6 +179,82 @@ export function AdminManagement({ currentAdmin }: AdminManagementProps) {
     } catch (error) {
       console.error("Error deactivating admin:", error)
       toast.error("Failed to deactivate admin account")
+    }
+  }
+
+  const handlePasswordChange = async () => {
+    if (!passwordData.currentPassword.trim()) {
+      toast.error("Current password is required")
+      return
+    }
+
+    if (!passwordData.newPassword.trim()) {
+      toast.error("New password is required")
+      return
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      toast.error("New password must be at least 6 characters long")
+      return
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmNewPassword) {
+      toast.error("New passwords do not match")
+      return
+    }
+
+    if (passwordData.currentPassword === passwordData.newPassword) {
+      toast.error("New password must be different from current password")
+      return
+    }
+
+    try {
+      setIsSubmitting(true)
+
+      // First, verify the current password
+      const { data: adminData, error: fetchError } = await supabase
+        .from("admins")
+        .select("password_hash")
+        .eq("id", currentAdmin.id)
+        .single()
+
+      if (fetchError) throw fetchError
+
+      // Verify current password
+      const isCurrentPasswordValid = await bcrypt.compare(passwordData.currentPassword, adminData.password_hash)
+      
+      if (!isCurrentPasswordValid) {
+        toast.error("Current password is incorrect")
+        return
+      }
+
+      // Hash the new password
+      const saltRounds = 12
+      const hashedNewPassword = await bcrypt.hash(passwordData.newPassword, saltRounds)
+
+      // Update the password
+      const { error: updateError } = await supabase
+        .from("admins")
+        .update({ 
+          password_hash: hashedNewPassword,
+          updated_at: new Date().toISOString()
+        })
+        .eq("id", currentAdmin.id)
+
+      if (updateError) throw updateError
+
+      toast.success("Password changed successfully!")
+      setIsPasswordChangeModalOpen(false)
+      setPasswordData({
+        currentPassword: "",
+        newPassword: "",
+        confirmNewPassword: ""
+      })
+    } catch (error) {
+      console.error("Error changing password:", error)
+      toast.error("Failed to change password")
+    } finally {
+      setIsSubmitting(false)
     }
   }
 
@@ -363,7 +451,17 @@ export function AdminManagement({ currentAdmin }: AdminManagementProps) {
                       </div>
                     </TableCell>
                     <TableCell>
-                      {admin.id !== currentAdmin.id && admin.is_active && (
+                      {admin.id === currentAdmin.id ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsPasswordChangeModalOpen(true)}
+                          className="text-blue-600 hover:text-blue-700"
+                        >
+                          <Edit className="h-4 w-4 mr-1" />
+                          Change Password
+                        </Button>
+                      ) : admin.is_active && (
                         <Button
                           variant="outline"
                           size="sm"
@@ -418,6 +516,146 @@ export function AdminManagement({ currentAdmin }: AdminManagementProps) {
               onClick={handleDeleteAdmin}
             >
               Deactivate Account
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Password Change Dialog */}
+      <Dialog open={isPasswordChangeModalOpen} onOpenChange={setIsPasswordChangeModalOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Edit className="h-5 w-5 text-blue-500" />
+              Change Password
+            </DialogTitle>
+            <DialogDescription>
+              Update your admin account password. Make sure to use a strong password.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Current Password */}
+            <div className="space-y-2">
+              <Label htmlFor="current-password">Current Password</Label>
+              <div className="relative">
+                <Input
+                  id="current-password"
+                  type={showCurrentPassword ? "text" : "password"}
+                  value={passwordData.currentPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
+                  placeholder="Enter your current password"
+                  disabled={isSubmitting}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                  disabled={isSubmitting}
+                >
+                  {showCurrentPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+
+            {/* New Password */}
+            <div className="space-y-2">
+              <Label htmlFor="new-password">New Password</Label>
+              <div className="relative">
+                <Input
+                  id="new-password"
+                  type={showNewPassword ? "text" : "password"}
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
+                  placeholder="Enter your new password"
+                  disabled={isSubmitting}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowNewPassword(!showNewPassword)}
+                  disabled={isSubmitting}
+                >
+                  {showNewPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+              <p className="text-xs text-gray-500">Password must be at least 6 characters long</p>
+            </div>
+
+            {/* Confirm New Password */}
+            <div className="space-y-2">
+              <Label htmlFor="confirm-new-password">Confirm New Password</Label>
+              <div className="relative">
+                <Input
+                  id="confirm-new-password"
+                  type={showConfirmNewPassword ? "text" : "password"}
+                  value={passwordData.confirmNewPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, confirmNewPassword: e.target.value }))}
+                  placeholder="Confirm your new password"
+                  disabled={isSubmitting}
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
+                  disabled={isSubmitting}
+                >
+                  {showConfirmNewPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
+                </Button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex gap-2 pt-4">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                setIsPasswordChangeModalOpen(false)
+                setPasswordData({
+                  currentPassword: "",
+                  newPassword: "",
+                  confirmNewPassword: ""
+                })
+              }}
+              disabled={isSubmitting}
+            >
+              Cancel
+            </Button>
+            <Button
+              className="flex-1 bg-blue-600 hover:bg-blue-700"
+              onClick={handlePasswordChange}
+              disabled={isSubmitting || !passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmNewPassword}
+            >
+              {isSubmitting ? (
+                <>
+                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2" />
+                  Changing...
+                </>
+              ) : (
+                <>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Change Password
+                </>
+              )}
             </Button>
           </div>
         </DialogContent>
