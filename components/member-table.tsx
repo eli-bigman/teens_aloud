@@ -299,10 +299,6 @@ export function MemberTable({ members, searchTerm, filterBy, onMemberUpdated }: 
         </div>
       )}
 
-      {/* Summary */}
-      <div className="text-sm text-muted-foreground">
-        Total: {filteredMembers.length} of {members.length} members
-      </div>
 
       {/* Modals */}
       <BirthdayEmailModal 
